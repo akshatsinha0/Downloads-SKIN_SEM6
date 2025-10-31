@@ -15,6 +15,9 @@
 \usepackage{xurl}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{microtype}
+\usepackage{soul}
+\sodef\spaced{}{.2em}{.6em plus.1em}{1em plus.1em minus.1em}
 \Urlmuskip=0mu plus 2mu
 % Hyperlinks and reference colors (load last)
 \usepackage[colorlinks=true,linkcolor=black,citecolor=blue,urlcolor=blue,breaklinks=true]{hyperref}
@@ -29,6 +32,8 @@
 \renewcommand\subsection{\@startsection{subsection}{2}{\z@}{3.25ex \@plus1ex \@minus .2ex}{1.5ex \@plus .2ex}{\normalfont\itshape}}
 \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}{3.25ex \@plus1ex \@minus .2ex}{1.5ex \@plus .2ex}{\normalfont\itshape}}
 \makeatother
+% Increase letter spacing globally for better readability
+\SetTracking{encoding=*}{160}
 
 \begin{document}
 
@@ -76,8 +81,6 @@ Diagnostic accuracy
 
 \maketitle
 
-% Improve URL breaking in itemize lists
-\sloppy
 
 % ================== Main content ==================
 \section{INTRODUCTION}
@@ -730,6 +733,7 @@ In conclusion, this work demonstrates that multimodal generative AI systems can 
 % === REFERENCES SECTION ===
 
 \subsection*{Datasets}
+\begingroup\sloppy
 \noindent\begin{itemize}
   \item \textbf{ISIC 2020:} Contains over 33,000 images and metadata. Focuses on melanoma detection.\\
   \url{https://challenge2020.isic-archive.com/}
@@ -744,6 +748,7 @@ In conclusion, this work demonstrates that multimodal generative AI systems can 
   \item \textbf{ISIC Archive Main Page:}\\ \url{https://www.isic-archive.com/}
   \item \textbf{NIH Open-i Medical Image Archive:}\\ \url{https://openi.nlm.nih.gov/}
 \end{itemize}
+\endgroup
 
 {\small
 \begin{thebibliography}{99}
