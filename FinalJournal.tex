@@ -500,23 +500,28 @@ The HAM10000 dataset includes 7 diagnostic categories: actinic keratoses and int
 
 For our experiments on HAM10000, we implement a balanced sampling strategy to address class imbalance, limiting each class to a maximum of 600 samples where available. This yields a working subset of 2,898 images with improved class balance while preserving the challenge of minority class recognition. We apply an 80-20 train-validation split with stratification by diagnosis, resulting in 2,318 training images and 580 validation images. Metadata preprocessing follows the same protocol as ISIC datasets: age values are imputed using median (mean age 52.3 years), sex is imputed using mode, and anatomic site information is standardized and converted to natural language templates (e.g., ``A lesion from the back of a 70 year old male'').
 
-\begin{figure}[!htb]
+\vspace{0.3cm}
+\noindent
+\begin{minipage}{\columnwidth}
 \centering
-\includegraphics[width=\columnwidth]{LesionLocalisation.png}
-\caption{\small Anatomic site distribution in HAM10000 dataset. The back and lower extremity are the most common lesion locations, accounting for over 40\% of cases, while less common sites include scalp, hand, ear, and genital regions. This distribution reflects typical clinical presentation patterns and informs metadata-based contextual priors in our multimodal fusion approach.}
+\includegraphics[width=0.95\columnwidth]{LesionLocalisation.png}
+\captionof{figure}{\small Anatomic site distribution in HAM10000 dataset. The back and lower extremity are the most common lesion locations, accounting for over 40\% of cases, while less common sites include scalp, hand, ear, and genital regions. This distribution reflects typical clinical presentation patterns and informs metadata-based contextual priors in our multimodal fusion approach.}
 \label{fig:lesion-localisation}
-\end{figure}
+\end{minipage}
+\vspace{0.3cm}
 
-\begin{figure}[!htb]
+\noindent
+\begin{minipage}{\columnwidth}
 \centering
-\includegraphics[width=\columnwidth]{HAMM.png}
-\caption{\small Age distribution of patients in HAM10000 subset. The histogram shows a right-skewed distribution with peak frequency in the 40-60 age range (mean 52.3 years). The overlaid density curve illustrates the continuous age distribution, demonstrating that skin lesions predominantly affect middle-aged and older adults, with relatively fewer cases in younger populations.}
+\includegraphics[width=0.95\columnwidth]{HAMM.png}
+\captionof{figure}{\small Age distribution of patients in HAM10000 subset. The histogram shows a right-skewed distribution with peak frequency in the 40-60 age range (mean age 52.3 years). The overlaid density curve illustrates the continuous age distribution, demonstrating that skin lesions predominantly affect middle-aged and older adults, with relatively fewer cases in younger populations.}
 \label{fig:ham-age-distribution}
-\end{figure}
+\end{minipage}
+\vspace{0.3cm}
 
 To evaluate multimodal fusion on HAM10000, we train a ResNet-18 image encoder combined with BERT-base-uncased text encoder, using the same fusion architecture as our main experiments but with reduced model capacity appropriate for the smaller dataset size. The image encoder extracts 512-dimensional features from $224 \times 224$ pixel dermoscopic images preprocessed with standard augmentations (horizontal flip, rotation $\pm 10°$, normalization). The text encoder processes metadata sentences with maximum token length 40, producing 768-dimensional embeddings. Features are concatenated and passed through a fusion classifier with 1,280 input dimensions mapping to 7 output classes.
 
-Training employs AdamW optimizer with learning rate $3 \times 10^{-4}$, batch size 16, and early stopping based on validation accuracy. After 21 epochs, the multimodal model achieves 79.3\% validation accuracy on HAM10000, demonstrating effective transfer of the fusion approach to an independent dataset with different imaging protocols. Notably, the model shows improved performance on minority classes compared to image-only baselines: df F1-score increases from 0.68 to 0.76 (+11.8\%), and vasc F1-score improves from 0.71 to 0.79 (+11.3\%). These gains confirm that metadata integration provides particularly strong benefits for rare lesion types where visual appearance alone may be ambiguous.
+Training employs AdamW optimizer with learning rate $3 \times 10^{-4}$, batch size 16, and early stopping based on validation accuracy. After 21 epochs, the multimodal model achieves 79.31\% validation accuracy on HAM10000, demonstrating effective transfer of the fusion approach to an independent dataset with different imaging protocols. Notably, the model shows improved performance on minority classes compared to image-only baselines: df F1-score increases from 0.68 to 0.76 (+11.8\%), and vasc F1-score improves from 0.71 to 0.79 (+11.3\%). These gains confirm that metadata integration provides particularly strong benefits for rare lesion types where visual appearance alone may be ambiguous.
 
 Cross-dataset evaluation between ISIC and HAM10000 reveals consistent multimodal advantages. Models pretrained on ISIC 2019/2020 and fine-tuned on HAM10000 achieve 82.1\% accuracy, a 3.5\% improvement over training from scratch, indicating that learned multimodal representations transfer effectively across institutions and acquisition devices. Conversely, HAM10000-pretrained models evaluated on ISIC 2018 maintain 88.7\% accuracy, only 4.1\% below ISIC-native training, demonstrating resilience to distribution shift. These results validate that our uncertainty-guided fusion mechanism generalizes beyond single-source datasets and supports deployment in diverse clinical environments with varying imaging equipment and patient populations.
 
