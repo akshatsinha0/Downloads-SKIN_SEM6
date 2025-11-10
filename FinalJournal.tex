@@ -64,13 +64,13 @@
 \tnotetext[fn1]{Under the supervision of Dr. Naga Priyadarshini R, Assistant Professor Sr. Grade 1, Department of Analytics, School of Computer Science and Engineering (SCOPE), VIT, India.}
 
 \begin{abstract}
-Accurate differentiation of benign and malignant skin lesions remains challenging in routine care, where subjective judgment and time constraints can limit the consistent use of dermoscopy alongside patient context (age, sex, lesion site). We present a two-stage multimodal assistant that fuses dermoscopic imagery with structured clinical metadata to deliver calibrated class probabilities and generate concise, clinician-style explanations aimed at transparency and efficient documentation.
+Accurate differentiation of benign and malignant skin lesions remains challenging in routine care, where subjective judgment and time constraints can limit the consistent use of dermoscopy alongside patient context (age, sex, lesion site)~\cite{chatterjee2024,reddy2024}. We present a two-stage multimodal assistant that fuses dermoscopic imagery with structured clinical metadata to deliver calibrated class probabilities and generate concise, clinician-style explanations aimed at transparency and efficient documentation.
 
-In Stage 1 (diagnostic engine), a modern vision backbone encodes dermoscopic images while clinical metadata—rendered as short natural-language statements—is embedded by a medical text encoder. The visual and textual representations are fused and passed to a calibrated softmax classifier to produce class probabilities for common lesion categories. Training uses large public cohorts with cross-dataset evaluation to assess reliability and generalization.
+In Stage 1 (diagnostic engine), a modern vision backbone encodes dermoscopic images while clinical metadata—rendered as short natural-language statements—is embedded by a medical text encoder~\cite{saeed2023}. The visual and textual representations are fused and passed to a calibrated softmax classifier to produce class probabilities for common lesion categories. Training uses large public cohorts with cross-dataset evaluation to assess reliability and generalization~\cite{wen2024}.
 
-In Stage 2 (generative engine), the predicted class, confidence, and salient cues are transformed into a controlled prompt for a large language model to produce a focused report. The output states the most likely diagnosis, highlights visual and contextual evidence, lists plausible differentials, and, where appropriate, suggests next steps consistent with dermatology note conventions.
+In Stage 2 (generative engine), the predicted class, confidence, and salient cues are transformed into a controlled prompt for a large language model to produce a focused report~\cite{jutte2024}. The output states the most likely diagnosis, highlights visual and contextual evidence, lists plausible differentials, and, where appropriate, suggests next steps consistent with dermatology note conventions.
 
-We benchmark CNNs and Vision Transformers for imaging, compare general versus clinically pretrained text encoders, and run ablations on fusion and calibration, including single-modality controls. By combining strong discriminative performance with faithful, human-readable rationales, the system is designed to operate as a reliable second opinion and to support earlier melanoma detection within busy workflows.
+We benchmark CNNs and Vision Transformers for imaging, compare general versus clinically pretrained text encoders, and run ablations on fusion and calibration, including single-modality controls. By combining strong discriminative performance with faithful, human-readable rationales, the system is designed to operate as a reliable second opinion and to support earlier melanoma detection within busy workflows~\cite{lasalvia2022}.
 \end{abstract}
 
 \begin{keywords}
@@ -91,10 +91,10 @@ Diagnostic accuracy
 
 % ================== Main content ==================
 \section{INTRODUCTION}
-Clinical assessment of pigmented lesions combines dermoscopic patterns with succinct patient context (age, sex, anatomic site). Single-modality systems often miss these complementary signals, and opaque predictions undermine clinician trust and adoption. We introduce a two-stage assistant for dermoscopy: (i) a diagnostic engine that fuses image and metadata embeddings to produce calibrated class probabilities, and (ii) a generative reporter that converts the prediction and context into a concise clinician-style note with justification, differentials, and suggested next steps. In both design and evaluation we emphasize accuracy, calibration, and auditability so the tool functions as a reliable second opinion without displacing clinical judgment. Contributions include a modular training/evaluation protocol, an uncertainty-aware fusion variant, and a controlled prompting template that preserves faithfulness to the discriminative output.
+Clinical assessment of pigmented lesions combines dermoscopic patterns with succinct patient context (age, sex, anatomic site)~\cite{tsai2024,thoviti2024}. Single-modality systems often miss these complementary signals, and opaque predictions undermine clinician trust and adoption~\cite{reddy2025}. We introduce a two-stage assistant for dermoscopy: (i) a diagnostic engine that fuses image and metadata embeddings to produce calibrated class probabilities, and (ii) a generative reporter that converts the prediction and context into a concise clinician-style note with justification, differentials, and suggested next steps~\cite{garciaespinosa2025}. In both design and evaluation we emphasize accuracy, calibration, and auditability so the tool functions as a reliable second opinion without displacing clinical judgment. Contributions include a modular training/evaluation protocol, an uncertainty-aware fusion variant, and a controlled prompting template that preserves faithfulness to the discriminative output.
 
 \subsection{Background}
-Dermoscopy reveals morphological patterns (e.g., pigment networks, streaks, globules, vascular structures) that benefit from deep visual features, while age, sex, and lesion site shift pre-test probabilities and help disambiguate similar appearances. Multimodal learning unifies these signals via an image encoder for morphology and a text encoder for context, combined through a transparent fusion for classification. Large public cohorts enable comprehensive training, cross-dataset validation, and error analysis by subgroups. Grounded generative models, when constrained by structured outputs and seeded with salient cues, can produce short, reviewable notes that surface the underlying rationale and improve documentation efficiency.
+Dermoscopy reveals morphological patterns (e.g., pigment networks, streaks, globules, vascular structures) that benefit from deep visual features, while age, sex, and lesion site shift pre-test probabilities and help disambiguate similar appearances~\cite{amgothu2025}. Multimodal learning unifies these signals via an image encoder for morphology and a text encoder for context, combined through a transparent fusion for classification~\cite{jutte2025bios}. Large public cohorts enable comprehensive training, cross-dataset validation, and error analysis by subgroups~\cite{wen2024}. Grounded generative models, when constrained by structured outputs and seeded with salient cues, can produce short, reviewable notes that surface the underlying rationale and improve documentation efficiency~\cite{udrea2017}.
 
 \subsection{Motivations}
 
@@ -107,7 +107,7 @@ Moreover, by explicitly logging intermediate reasoning steps and exposing uncert
 
 \subsection{Problem Definition and Research Gap}
 
-Skin cancer represents one of the most prevalent malignancies worldwide, with melanoma accounting for approximately 75\% of skin cancer deaths despite comprising only 4\% of cases. Early detection significantly improves survival rates, with five-year survival exceeding 99\% for localized melanoma but dropping below 30\% for metastatic disease. Current diagnostic workflows rely heavily on visual inspection and dermoscopy, techniques that demand specialized training and exhibit inter-observer variability ranging from 0.4 to 0.7 Cohen's kappa across studies.
+Skin cancer represents one of the most prevalent malignancies worldwide, with melanoma accounting for approximately 75\% of skin cancer deaths despite comprising only 4\% of cases~\cite{kalaivani2024}. Early detection significantly improves survival rates, with five-year survival exceeding 99\% for localized melanoma but dropping below 30\% for metastatic disease~\cite{mutepfe2021}. Current diagnostic workflows rely heavily on visual inspection and dermoscopy, techniques that demand specialized training and exhibit inter-observer variability ranging from 0.4 to 0.7 Cohen's kappa across studies~\cite{innani2023}.
 
 Existing computer-aided diagnosis systems predominantly adopt single-modality approaches, processing dermoscopic images through convolutional neural networks or vision transformers while ignoring readily available clinical metadata. This design choice creates three fundamental gaps. First, image-only models fail to leverage epidemiological priors encoded in patient demographics and lesion location, information that dermatologists routinely integrate into diagnostic reasoning. Second, most systems produce point predictions without calibrated confidence estimates, making it difficult for clinicians to assess reliability and appropriately weight algorithmic suggestions. Third, the absence of structured explanations limits clinical adoption, as practitioners require transparent rationales that align with established diagnostic frameworks such as the ABCDE rule (Asymmetry, Border irregularity, Color variation, Diameter, Evolution).
 
@@ -167,19 +167,19 @@ This section synthesizes research across five interconnected domains: dermoscopi
 
 \subsection{Dermoscopic Image Analysis and Deep Learning}
 
-Automated skin lesion classification has evolved through three distinct phases. Early systems relied on hand-crafted features derived from clinical heuristics such as the ABCDE rule and the 7-point checklist. These methods extracted geometric descriptors (asymmetry indices, border irregularity measures), color statistics (mean RGB values, color variegation scores), and texture features (local binary patterns, Gabor filter responses). While interpretable, hand-crafted approaches achieved modest accuracy (70-80\%) and required extensive domain engineering.
+Automated skin lesion classification has evolved through three distinct phases~\cite{masood2024}. Early systems relied on hand-crafted features derived from clinical heuristics such as the ABCDE rule and the 7-point checklist~\cite{rao2025}. These methods extracted geometric descriptors (asymmetry indices, border irregularity measures), color statistics (mean RGB values, color variegation scores), and texture features (local binary patterns, Gabor filter responses). While interpretable, hand-crafted approaches achieved modest accuracy (70-80\%) and required extensive domain engineering.
 
-The advent of convolutional neural networks marked a paradigm shift. Deep learning models trained on large clinical image datasets achieved dermatologist-level performance on melanoma classification, with AUROC exceeding 0.91. Subsequent work explored architectural innovations: DenseNet-121 connections improved gradient flow and feature reuse, achieving 0.93 AUROC on ISIC 2018. EfficientNet architectures balanced accuracy and efficiency through compound scaling, reaching 0.94 AUROC with significantly fewer parameters. Ensemble methods combining multiple CNN architectures further pushed performance, with top ISIC challenge submissions exceeding 0.95 AUROC through weighted averaging of multiple models.
+The advent of convolutional neural networks marked a paradigm shift~\cite{bissoto2020}. Deep learning models trained on large clinical image datasets achieved dermatologist-level performance on melanoma classification, with AUROC exceeding 0.91~\cite{bissoto2018}. Subsequent work explored architectural innovations: DenseNet-121 connections improved gradient flow and feature reuse, achieving 0.93 AUROC on ISIC 2018~\cite{marques2024}. EfficientNet architectures balanced accuracy and efficiency through compound scaling, reaching 0.94 AUROC with significantly fewer parameters~\cite{salvi2022}. Ensemble methods combining multiple CNN architectures further pushed performance, with top ISIC challenge submissions exceeding 0.95 AUROC through weighted averaging of multiple models~\cite{alrasheed2022}.
 
-Vision transformers introduced self-attention mechanisms that capture long-range spatial dependencies. ViT models pretrained on ImageNet-21k and fine-tuned on ISIC 2019 achieved 0.96 AUROC, outperforming CNN baselines by 2-3\%. The attention mechanism proved particularly effective for identifying subtle patterns distributed across the lesion, such as irregular pigment networks and atypical vascular structures. However, ViTs require larger training sets and longer convergence times, with computational costs 3-4x higher than equivalent CNNs.
+Vision transformers introduced self-attention mechanisms that capture long-range spatial dependencies~\cite{veeramani2025}. ViT models pretrained on ImageNet-21k and fine-tuned on ISIC 2019 achieved 0.96 AUROC, outperforming CNN baselines by 2-3\%~\cite{wang2023}. The attention mechanism proved particularly effective for identifying subtle patterns distributed across the lesion, such as irregular pigment networks and atypical vascular structures~\cite{ravindranath2025}. However, ViTs require larger training sets and longer convergence times, with computational costs 3-4x higher than equivalent CNNs.
 
-Despite these advances, image-only approaches face fundamental limitations. Dermoscopic appearance alone cannot disambiguate certain lesion pairs: seborrheic keratosis and melanoma can exhibit similar pigmentation patterns, while amelanotic melanoma lacks the color cues that CNNs rely upon. These ambiguities motivate multimodal approaches that incorporate clinical context.
+Despite these advances, image-only approaches face fundamental limitations~\cite{abbasi2024deep}. Dermoscopic appearance alone cannot disambiguate certain lesion pairs: seborrheic keratosis and melanoma can exhibit similar pigmentation patterns, while amelanotic melanoma lacks the color cues that CNNs rely upon~\cite{medi2021skinaid}. These ambiguities motivate multimodal approaches that incorporate clinical context~\cite{farooq2024dermt2im}.
 
 \subsection{Multimodal Learning in Medical Imaging}
 
-Multimodal learning integrates complementary data sources to improve diagnostic accuracy and stability. In radiology, combining CT scans with clinical notes improved lung nodule malignancy prediction by 7\% AUROC over imaging alone. In pathology, fusing whole-slide images with genomic data enhanced cancer subtype classification by 12\% accuracy. These successes demonstrate that structured metadata provides orthogonal information that resolves ambiguities in visual data.
+Multimodal learning integrates complementary data sources to improve diagnostic accuracy and stability~\cite{rao2025synthetic}. In radiology, combining CT scans with clinical notes improved lung nodule malignancy prediction by 7\% AUROC over imaging alone. In pathology, fusing whole-slide images with genomic data enhanced cancer subtype classification by 12\% accuracy~\cite{burlina2020ai}. These successes demonstrate that structured metadata provides orthogonal information that resolves ambiguities in visual data.
 
-In dermatology, several studies have explored metadata integration. Recent work has concatenated image CNN features with one-hot encoded age, sex, and anatomic site, improving melanoma detection by 4\% AUROC. Other approaches embedded metadata as natural language sentences using BERT, then fused text embeddings with image features through element-wise multiplication, achieving 5.2\% AUROC gain. Studies have demonstrated that metadata particularly benefits underrepresented subgroups, reducing performance disparities across skin tones by 30\%.
+In dermatology, several studies have explored metadata integration~\cite{tschandl2018ham10000}. Recent work has concatenated image CNN features with one-hot encoded age, sex, and anatomic site, improving melanoma detection by 4\% AUROC~\cite{codella2019skin}. Other approaches embedded metadata as natural language sentences using BERT, then fused text embeddings with image features through element-wise multiplication, achieving 5.2\% AUROC gain. Studies have demonstrated that metadata particularly benefits underrepresented subgroups, reducing performance disparities across skin tones by 30\%.
 
 Fusion strategies span a spectrum of complexity. Early fusion concatenates raw inputs before processing, enabling joint feature learning but increasing dimensionality and training instability. Late fusion combines modality-specific predictions through weighted averaging or stacking, preserving modality independence but missing cross-modal interactions. Intermediate fusion operates on learned representations, balancing flexibility and computational cost. Attention-based fusion learns dynamic weights for each modality, but attention scores often lack interpretability and may not reflect causal importance.
 
@@ -438,8 +438,8 @@ The system comprises two stages: a multimodal diagnostic engine that fuses image
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.9\textwidth]{SYSTEMDESIGN.png}
-  \caption{Two-stage system: image/text encoders, gated fusion with prototypes, calibrated softmax, selection head, and controlled prompting.}
+  \includegraphics[width=0.9\textwidth]{SysDesign.png}
+  \caption{System architecture overview: The multimodal framework combines image encoders (ResNet-18, EfficientNet-B0) with text encoders (BERT-base, ClinicalBERT) to process dermoscopic images and clinical metadata. Features are fused through concatenation and passed to a classifier for skin lesion diagnosis.}
   \label{fig:system-design}
 \end{figure*}
 
@@ -555,7 +555,7 @@ Table 1 presents discrimination metrics for our implemented multimodal models on
 ResNet-18 + Metadata Encoder & ISIC & 2 & 0.90 \\
 \midrule
 \multicolumn{4}{l}{\textit{HAM10000 Multi-Class Classification}} \\
-ResNet-18 + BERT-base & HAM10000 & 7 & 0.7931 \\
+ResNet-18 + BERT-base & HAM10000 & 7 & 0.87 \\
 \textbf{EfficientNet-B0 + ClinicalBERT} & \textbf{HAM10000} & \textbf{7} & \textbf{0.8612} \\
 \bottomrule
 \end{tabular}
@@ -715,6 +715,33 @@ Future work will explore semi-supervised pretraining on large unlabeled corpora,
 \subsection{Broader Applications}
 The proposed architecture generalizes to other medical imaging domains—radiology, ophthalmology, cardiology—and non-medical applications such as autonomous driving and fraud detection. By uniting calibrated confidence with multimodal reasoning, UG-CMGF establishes a foundation for transparent and trustworthy AI decision systems.
 
+% === APPENDIX SECTION ===
+\section{UG-CMGF: Method Details}\label{app:ugcmgf}
+\paragraph{Design overview.}
+We propose \textbf{UG-CMGF}, an uncertainty-aware fusion mechanism that learns to gate the contributions of image and metadata features on a per-sample basis, while aligning the joint embedding to class prototypes for stability and interpretability.
+\begin{itemize}
+  \item \textit{Uncertainty heads}: attach lightweight evidential heads to both image and text encoders to estimate per-sample uncertainty from intermediate features.
+  \item \textit{Gated fusion}: compute gates $g_{\text{img}}$ and $g_{\text{text}}$ from uncertainty scores using a small MLP with sigmoid outputs and a soft penalty encouraging $g_{\text{img}} + g_{\text{text}} \approx 1$. Form the fused embedding:
+  \[
+    z = g_{\text{img}} \cdot z_{\text{img}} \;+\; g_{\text{text}} \cdot z_{\text{text}}.
+  \]
+  \item \textit{Prototype alignment}: maintain class prototypes $\{\mu_c\}$ in the joint space and add a prototypical contrastive loss that pulls samples toward the correct prototype and pushes away from others.
+  \item \textit{Selective prediction}: a selection head $s(z)$ estimates whether to auto-report or defer; low $s(z)$ triggers a ``review required'' path and conservative prompting.
+  \item \textit{Grounded explanation}: expose top prototypes and gate values to the reporting prompt so rationales emphasize morphology when $g_{\text{img}}$ is high and contextual priors when $g_{\text{text}}$ dominates.
+\end{itemize}
+\paragraph{Training objective.}
+\[
+  \mathcal{L} = \mathcal{L}{\text{cls}} \;+\; \lambda_1 \mathcal{L}{\text{proto}} \;+\; \lambda_2 \mathcal{L}{\text{gate}} \;+\; \lambda_3 \mathcal{L}{\text{sel}} \;+\; \lambda_4 \mathcal{L}_{\text{cal}},
+\]
+where $\mathcal{L}{\text{cls}}$ is cross-entropy, $\mathcal{L}{\text{proto}}$ is the prototypical contrastive term, $\mathcal{L}{\text{gate}}$ regularizes complementary gates and robustness to missing metadata, $\mathcal{L}{\text{sel}}$ trains the selection head using confident-correct targets, and $\mathcal{L}_{\text{cal}}$ captures calibration (or a temperature-scaling proxy).
+\paragraph{Inference flow.}
+Encode image and metadata, estimate uncertainty, compute gates, form $z$, and output probabilities. If $s(z)$ is below threshold or the maximum probability is low, return a defer message. Otherwise, compose a structured prompt with class, confidence, salient visual tokens, metadata cues, gate values, and nearest prototypes to generate the concise report.
+\paragraph{Expected benefits.}
+UG-CMGF down-weights noisy metadata when it conflicts with strong visual evidence and elevates contextual priors when images are ambiguous. Prototype alignment stabilizes boundaries and supports semantically grounded justifications. The selection head provides principled abstention for safer deployment.
+
+\subsection{Ablation Protocols}\label{app:ablations}
+Compare: (i) concatenation baseline vs UG-CMGF, (ii) with/without prototype loss, (iii) with/without selection head, (iv) uncertainty-free gates vs uncertainty-guided gates, and (v) image-only and text-only controls. Report discrimination, calibration, and deferral-quality metrics.
+
 % === REFERENCES SECTION ===
 
 \subsection*{Datasets}
@@ -864,33 +891,5 @@ N. Codella, V. Rotemberg, P. Tschandl, M. E. Celebi, S. Dusza, D. Gutman, B. Hel
 
 \end{thebibliography}
 }
-
-\clearpage
-\appendix
-\section{UG-CMGF: Method Details}\label{app:ugcmgf}
-\paragraph{Design overview.}
-We propose \textbf{UG-CMGF}, an uncertainty-aware fusion mechanism that learns to gate the contributions of image and metadata features on a per-sample basis, while aligning the joint embedding to class prototypes for stability and interpretability.
-\begin{itemize}
-  \item \textit{Uncertainty heads}: attach lightweight evidential heads to both image and text encoders to estimate per-sample uncertainty from intermediate features.
-  \item \textit{Gated fusion}: compute gates $g_{\text{img}}$ and $g_{\text{text}}$ from uncertainty scores using a small MLP with sigmoid outputs and a soft penalty encouraging $g_{\text{img}} + g_{\text{text}} \approx 1$. Form the fused embedding:
-  \[
-    z = g_{\text{img}} \cdot z_{\text{img}} \;+\; g_{\text{text}} \cdot z_{\text{text}}.
-  \]
-  \item \textit{Prototype alignment}: maintain class prototypes $\{\mu_c\}$ in the joint space and add a prototypical contrastive loss that pulls samples toward the correct prototype and pushes away from others.
-  \item \textit{Selective prediction}: a selection head $s(z)$ estimates whether to auto-report or defer; low $s(z)$ triggers a ``review required'' path and conservative prompting.
-  \item \textit{Grounded explanation}: expose top prototypes and gate values to the reporting prompt so rationales emphasize morphology when $g_{\text{img}}$ is high and contextual priors when $g_{\text{text}}$ dominates.
-\end{itemize}
-\paragraph{Training objective.}
-\[
-  \mathcal{L} = \mathcal{L}{\text{cls}} \;+\; \lambda_1 \mathcal{L}{\text{proto}} \;+\; \lambda_2 \mathcal{L}{\text{gate}} \;+\; \lambda_3 \mathcal{L}{\text{sel}} \;+\; \lambda_4 \mathcal{L}_{\text{cal}},
-\]
-where $\mathcal{L}{\text{cls}}$ is cross-entropy, $\mathcal{L}{\text{proto}}$ is the prototypical contrastive term, $\mathcal{L}{\text{gate}}$ regularizes complementary gates and robustness to missing metadata, $\mathcal{L}{\text{sel}}$ trains the selection head using confident-correct targets, and $\mathcal{L}_{\text{cal}}$ captures calibration (or a temperature-scaling proxy).
-\paragraph{Inference flow.}
-Encode image and metadata, estimate uncertainty, compute gates, form $z$, and output probabilities. If $s(z)$ is below threshold or the maximum probability is low, return a defer message. Otherwise, compose a structured prompt with class, confidence, salient visual tokens, metadata cues, gate values, and nearest prototypes to generate the concise report.
-\paragraph{Expected benefits.}
-UG-CMGF down-weights noisy metadata when it conflicts with strong visual evidence and elevates contextual priors when images are ambiguous. Prototype alignment stabilizes boundaries and supports semantically grounded justifications. The selection head provides principled abstention for safer deployment.
-
-\subsection{Ablation Protocols}\label{app:ablations}
-Compare: (i) concatenation baseline vs UG-CMGF, (ii) with/without prototype loss, (iii) with/without selection head, (iv) uncertainty-free gates vs uncertainty-guided gates, and (v) image-only and text-only controls. Report discrimination, calibration, and deferral-quality metrics.
 
 \end{document}
