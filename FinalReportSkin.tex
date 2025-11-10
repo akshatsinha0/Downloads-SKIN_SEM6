@@ -290,8 +290,8 @@ Thank you all for your contributions and support.
  & \quad 4.2.4 Sequence Diagram & 7 \\
 \hline
 \textbf{5.} & \hyperlink{chapter5}{\textbf{METHODOLOGY AND TESTING}} & \textbf{8} \\
- & \textit{<< Module Description >>} & \\
- & \textit{<< Testing >>} & \\
+ & 5.1 Module Description & 8 \\
+ & 5.2 Testing & 8 \\
 \hline
 \textbf{6.} & \hyperlink{chapter6}{\textbf{PROJECT DEMONSTRATION}} & \textbf{9} \\
 \hline
@@ -301,7 +301,9 @@ Thank you all for your contributions and support.
 \hline
 \textbf{9.} & \hyperlink{chapter9}{\textbf{REFERENCES}} & \textbf{12} \\
 \hline
- & \hyperlink{appendixa}{\textbf{APPENDIX A -- SAMPLE CODE}} & \textbf{13} \\
+ & \hyperlink{appendixa}{\textbf{APPENDIX A}} & \textbf{13} \\
+\hline
+ & \hyperlink{appendixb}{\textbf{APPENDIX B}} & \textbf{14} \\
 \hline
 \end{longtable}
 }
@@ -332,6 +334,10 @@ Thank you all for your contributions and support.
 4.3 & Level 2 Data Flow Diagram providing detailed view of internal processes & \\
 \hline
 4.4 & Use Case Diagram showing the primary actors and their interactions with the system & \\
+\hline
+4.5 & Class Diagram showing the object-oriented structure of the system components & \\
+\hline
+4.6 & Sequence Diagram showing the temporal flow of interactions between system components during a typical diagnostic workflow & \\
 \hline
 \end{tabularx}
 
@@ -420,13 +426,11 @@ WBS & Work Breakdown Structure \\
 \vspace{0.5cm}
 
 {\setstretch{1.15}\normalsize\justifying
-Early and reliable differentiation of benign and malignant skin lesions is central to dermatology, yet routine practice can be subjective and time-pressured when visual dermoscopy is not paired consistently with patient context such as age, sex, and lesion location. This work proposes a two-stage clinical assistant that first delivers a calibrated diagnosis from fused multimodal inputs and then produces a concise, clinician-style explanation to improve transparency, documentation efficiency, and trust.
+Early and reliable differentiation between benign and malignant skin lesions is one of the main goals in dermatology, but routine diagnosis can often be subjective and inconsistent. Clinicians are usually pressed for time, and visual dermoscopy on its own can sometimes lead to uncertainty, especially when important patient information such as age, sex, and lesion location is not considered alongside the image. To address this challenge, this work presents a two-stage clinical assistant designed to combine image-based and patient-based information. The system aims to deliver a calibrated and interpretable diagnosis while also providing clear, clinician-style explanations that improve transparency, efficiency in documentation, and trust among healthcare providers.
 
-In Stage 1 (diagnostic engine), a modern vision backbone encodes dermoscopic images while structured clinical metadata—rendered as natural language—is embedded by a medical text encoder. The visual and textual representations are concatenated and passed to a softmax classifier to yield class probabilities for common lesion categories. Training uses large, publicly available cohorts and includes cross-dataset checks to assess robustness and generalization beyond the development distribution.
+In Stage 1, known as the diagnostic engine, dermoscopic images are processed by a modern vision model that learns to identify important visual patterns. Alongside this, structured clinical data such as age, sex, and body site are converted into natural language sentences and processed using a medical text encoder. The visual and textual representations are then combined and passed to a softmax classifier that outputs the probability of each possible lesion type. The system is trained using large, publicly available datasets of skin images and metadata, with additional cross-dataset evaluations to measure robustness and generalization on unseen data.
 
-In Stage 2 (generative engine), the predicted class, confidence, and available clinical context are transformed into a controlled prompt for a large language model to generate a focused report. The output states the most likely diagnosis, highlights salient visual and contextual cues, lists plausible differentials, and suggests next steps when appropriate, aligning with common dermatology note structures.
-
-Planned evaluations compare CNN and Vision Transformer encoders for images, and general versus clinically pretrained language models for metadata. Additional ablations test multimodal fusion against single-modality baselines and assess explanation quality for clinical relevance and completeness. By coupling strong discriminative performance with faithful, human-readable rationales, the system aims to serve as a reliable second opinion and support earlier melanoma detection within busy workflows.
+In Stage 2, the generative engine uses the predicted class, confidence score, and available patient details to create a structured prompt for a large language model. The model generates a short and focused report that explains the diagnosis, highlights key image and metadata cues, lists other possible conditions, and recommends next steps when relevant. Planned experiments include comparing CNN and Vision Transformer models for image processing and testing different text encoders for metadata. Further studies will evaluate the benefits of combining multiple data types and measure the clarity and usefulness of the generated reports. Overall, the system is intended to act as a reliable second opinion for dermatologists and support early and accurate melanoma detection in real-world clinical workflows.
 }
 
 % === MAIN MATTER: CHAPTER 1 ===
@@ -665,11 +669,21 @@ The use case diagram identifies the key actors and their interactions with the s
 
 \subsubsection{Class Diagram}
 
-The class diagram will illustrate the object-oriented structure of the system components, showing the relationships between image encoders, text encoders, fusion modules, classifiers, and reporting components. \textit{[Placeholder for class diagram]}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{classdiag.png}
+  \caption{Class Diagram showing the object-oriented structure of the system components.}
+  \label{fig:class-diagram}
+\end{figure}
 
 \subsubsection{Sequence Diagram}
 
-The sequence diagram will show the temporal flow of interactions between system components during a typical diagnostic workflow, from image upload through report generation. \textit{[Placeholder for sequence diagram]}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{sequence.png}
+  \caption{Sequence Diagram showing the temporal flow of interactions between system components during a typical diagnostic workflow.}
+  \label{fig:sequence-diagram}
+\end{figure}
 
 \subsection{Components}
 
@@ -683,40 +697,6 @@ The sequence diagram will show the temporal flow of interactions between system 
 
 \paragraph{Generative reporter.} Structured prompt from class, confidence, and cues produces a focused note.
 
-\subsection{Data Flow}
-
-\begin{enumerate}
-  \item Validate and normalize image+metadata.
-  \item Extract \(z_{\text{img}}\) and \(z_{\text{text}}\).
-  \item Fuse (concatenation or UG-CMGF) and classify; calibrate probabilities.
-  \item If selected, generate the report; else return a defer message with probability summary.
-\end{enumerate}
-
-\subsection{Prompting Template (Report Skeleton)}
-
-\begin{itemize}
-  \item \textbf{Diagnosis}: <top class> (confidence: <value>).
-  \item \textbf{Justification}: salient morphology and context summarized from image cues and metadata.
-  \item \textbf{Differentials}: 2--3 plausible alternatives with brief rationale.
-  \item \textbf{Next steps}: dermoscopy follow-up or escalation guidance consistent with scope.
-  \item \textbf{Note}: this summary supports---not replaces---clinical judgment.
-\end{itemize}
-
-\subsection{Deployment Considerations}
-
-\begin{itemize}
-  \item Stateless inference service exposing a simple API (image + metadata \(\rightarrow\) probabilities + report).
-  \item CPU and GPU targets; configurable thresholds for deferral and report length.
-  \item Logging for inputs (hashed), outputs, latency, confidence, and model version for audit.
-\end{itemize}
-
-\subsection{Assumptions and Limitations}
-
-\begin{itemize}
-  \item Scope limited to dermoscopy and the specified metadata fields; no treatment recommendations.
-  \item Reports remain decision support and require clinician review, especially on deferred or low-confidence cases.
-\end{itemize}
-
 % === CHAPTER 5: METHODOLOGY AND TESTING ===
 \clearpage
 
@@ -728,54 +708,39 @@ The sequence diagram will show the temporal flow of interactions between system 
 
 This section details datasets and governance, preprocessing, model components, training and evaluation protocol, and a proposed algorithmic improvement that augments fusion, calibration, and explanation quality.
 
-\subsection{Datasets and Governance}
+\subsection{Module Description}
 
-\begin{itemize}
-  \item Create patient-level stratified Train/Val/Test splits on ISIC 2019/2020; use HAM10000 as an external validation set.
-  \item Use de-identified metadata (age, sex, anatomic site); represent missing fields explicitly.
-  \item Document licenses, inclusion/exclusion criteria, transforms, and class definitions.
-\end{itemize}
+\textbf{Module 1: Input Processing}
 
-\subsection{Task and Outputs}
+Handles intake and preprocessing of clinical data. Accepts dermoscopic images (JPG/PNG, 512×512 or 224×224) and metadata (age, sex, lesion site). Validates format, handles missing values, and applies normalization, resizing, and augmentation. Outputs processed image tensors and formatted metadata.
 
-\begin{itemize}
-  \item Input: one dermoscopic image + \{age, sex, anatomic site\}.
-  \item Diagnostic output: class probabilities with per-class confidence and calibrated overall score.
-  \item Reporter output: short note with diagnosis, justification, differentials, and next steps.
-  \item Uncertainty/Audit: below-threshold confidence triggers deferral; log model/version/seed.
-\end{itemize}
+\textbf{Module 2: Multimodal Classification System}
 
-\subsection{Data and Preprocessing}
+Core diagnostic engine combining visual and text data.
 
-\begin{itemize}
-  \item Imaging: square crop/pad; resize (448--512); normalize; light augments.
-  \item Metadata: standardize categories; encode as short sentences.
-  \item Imbalance/Quality: stratified sampling and/or class weights; exclude corrupted images.
-\end{itemize}
+Image Encoder: EfficientNet, ResNet, or ViT extract image features into 512D embeddings.
 
-\subsection{Models and Baselines}
+Text Encoder: BERT or ClinicalBERT process metadata sentences into 512D embeddings.
 
-\begin{itemize}
-  \item Image encoders: CNN and ViT-family models, fine-tuned from public weights.
-  \item Text encoders: compact BERT and clinically pretrained variant.
-  \item Fusion/Calibration: concatenation+linear softmax; temperature scaling.
-  \item Optimization: AdamW, cosine decay, early stopping on validation AUROC.
-\end{itemize}
+Fusion Module: Concatenates or adaptively fuses embeddings using uncertainty-based gating (UG-CMGF).
 
-\subsection{Novel Algorithmic Improvement}
+Classifier: Softmax head outputs calibrated probabilities, top diagnosis, and confidence scores.
 
-UG-CMGF introduces uncertainty-aware gating to balance image and metadata features per case and align embeddings to class prototypes. A selection head defers low-confidence cases.
+\textbf{Module 3: Explanatory Report Generation}
 
-\subsection{Evaluation Protocol}
+Transforms model outputs into readable clinical reports. Aggregates key image and metadata cues, then uses GPT-4, LLaMA-3, or Gemini to generate 150–200 word summaries including diagnosis, justifications, differentials, and suggested actions.
 
-\begin{itemize}
-  \item Metrics: AUROC/AUPRC/Accuracy/F1; ECE, Brier score, reliability plots.
-  \item Generalization: train/validate on ISIC 2019/2020; evaluate on HAM10000.
-  \item Significance: bootstrap CIs; DeLong tests for AUROC comparisons.
-  \item Safety/Deferral: track deferral rates and error types.
-\end{itemize}
+\textbf{Module 4: Output and Final Diagnosis}
 
-\subsection{Testing Strategy}
+Displays predicted class, probability distribution, and confidence. Formats reports (PDF/HTML) with timestamps and model details, and suggests follow-up steps and educational material.
+
+\textbf{Cross-Cutting Modules}
+
+Calibration ensures reliable confidence (ECE < 0.05). Selection flags uncertain cases (confidence < 0.7). Monitoring logs inputs, outputs, and latency for audits. RESTful API supports secure, scalable deployment.
+
+Overall: Modular, transparent, and scalable architecture enabling accurate, explainable skin lesion diagnosis.
+
+\subsection{Testing}
 
 \begin{itemize}
   \item \textbf{Unit Testing:} Individual components tested with synthetic data.
@@ -1110,42 +1075,157 @@ Burlina, P. M., Paul, W., Mathew, P. A., Joshi, N. J., Rebman, A. W., \& Aucott,
 \addcontentsline{toc}{section}{APPENDIX A}
 \hypertarget{appendixa}{}
 
-\section*{UG-CMGF: Method Details}
+\noindent\textbf{Algorithm 3: Grad-CAM Visualization}
 
-\paragraph{Design overview.}
-We propose \textbf{UG-CMGF}, an uncertainty-aware fusion mechanism that learns to gate the contributions of image and metadata features on a per-sample basis, while aligning the joint embedding to class prototypes for stability and interpretability.
+\vspace{0.3cm}
 
-\begin{itemize}
-  \item \textit{Uncertainty heads}: attach lightweight evidential heads to both image and text encoders to estimate per-sample uncertainty from intermediate features.
-  \item \textit{Gated fusion}: compute gates \(g_{\text{img}}\) and \(g_{\text{text}}\) from uncertainty scores using a small MLP with sigmoid outputs and a soft penalty encouraging \(g_{\text{img}} + g_{\text{text}} \approx 1\). Form the fused embedding:
-  \[
-    z = g_{\text{img}} \cdot z_{\text{img}} \;+\; g_{\text{text}} \cdot z_{\text{text}}.
-  \]
-  \item \textit{Prototype alignment}: maintain class prototypes \(\{\mu_c\}\) in the joint space and add a prototypical contrastive loss that pulls samples toward the correct prototype and pushes away from others.
-  \item \textit{Selective prediction}: a selection head \(s(z)\) estimates whether to auto-report or defer; low \(s(z)\) triggers a ``review required'' path and conservative prompting.
-  \item \textit{Grounded explanation}: expose top prototypes and gate values to the reporting prompt so rationales emphasize morphology when \(g_{\text{img}}\) is high and contextual priors when \(g_{\text{text}}\) dominates.
-\end{itemize}
+\noindent\textbf{Input:} Model $M$, image tensor $I$, text inputs ($ids$, $mask$), target layer $L$
 
-\paragraph{Training objective.}
-\[
-  \mathcal{L} = \mathcal{L}_{\text{cls}} \;+\; \lambda_1 \mathcal{L}_{\text{proto}} \;+\; \lambda_2 \mathcal{L}_{\text{gate}} \;+\; \lambda_3 \mathcal{L}_{\text{sel}} \;+\; \lambda_4 \mathcal{L}_{\text{cal}},
-\]
-where \(\mathcal{L}_{\text{cls}}\) is cross-entropy, \(\mathcal{L}_{\text{proto}}\) is the prototypical contrastive term, \(\mathcal{L}_{\text{gate}}\) regularizes complementary gates and robustness to missing metadata, \(\mathcal{L}_{\text{sel}}\) trains the selection head using confident-correct targets, and \(\mathcal{L}_{\text{cal}}\) captures calibration (or a temperature-scaling proxy).
+\noindent\textbf{Output:} Heatmap $H$, predicted class $c^*$
 
-\paragraph{Inference flow.}
-Encode image and metadata, estimate uncertainty, compute gates, form \(z\), and output probabilities. If \(s(z)\) is below threshold or the maximum probability is low, return a defer message. Otherwise, compose a structured prompt with class, confidence, salient visual tokens, metadata cues, gate values, and nearest prototypes to generate the concise report.
+\vspace{0.2cm}
 
-\paragraph{Expected benefits.}
-UG-CMGF down-weights noisy metadata when it conflicts with strong visual evidence and elevates contextual priors when images are ambiguous. Prototype alignment stabilizes boundaries and supports semantically grounded justifications. The selection head provides principled abstention for safer deployment.
+\noindent\textit{// Setup hooks}
+
+\begin{enumerate}
+  \item Initialize $V_L \leftarrow \text{None}$, $A_L \leftarrow \text{None}$
+  \item Register forward hook: $A_L \leftarrow$ activations from layer $L$
+  \item Register backward hook: $V_L \leftarrow$ gradients w.r.t. layer $L$
+\end{enumerate}
+
+\noindent\textit{// Forward pass}
+
+\begin{enumerate}
+  \setcounter{enumi}{3}
+  \item Set model to evaluation mode
+  \item $\hat{y} \leftarrow M(I, ids, mask)$ \quad $\rhd$ Get predictions
+  \item $c^* \leftarrow \arg\max_c \hat{y}_c$ \quad $\rhd$ Predicted class
+\end{enumerate}
+
+\noindent\textit{// Backward pass}
+
+\begin{enumerate}
+  \setcounter{enumi}{6}
+  \item Zero model gradients
+  \item $\mathcal{L} \leftarrow \hat{y}_{c^*}$ \quad $\rhd$ Target class score
+  \item $\mathcal{L}.\text{backward}()$ \quad $\rhd$ Compute gradients
+\end{enumerate}
+
+\noindent\textit{// Compute heatmap}
+
+\begin{enumerate}
+  \setcounter{enumi}{9}
+  \item $\nabla \leftarrow V_L[0]$ \quad $\rhd$ Extract gradients
+  \item $A \leftarrow A_L[0]$ \quad $\rhd$ Extract activations
+  \item $w_k \leftarrow (1 / HW) \sum_{i,j} \nabla_{k,i,j}$ for each channel $k$ \quad $\rhd$ Global average pooling
+  \item $H_{\text{raw}} \leftarrow \sum_k w_k \cdot A_k$ \quad $\rhd$ Weighted combination
+  \item $H_{\text{raw}} \leftarrow \max(H_{\text{raw}}, 0)$ \quad $\rhd$ ReLU activation
+  \item $H \leftarrow \text{resize}(H_{\text{raw}}, (W_{\text{img}}, H_{\text{img}}))$ \quad $\rhd$ Upsample to image size
+  \item $H \leftarrow (H - \min(H)) / (\max(H) - \min(H))$ \quad $\rhd$ Normalize to [0,1]
+\end{enumerate}
+
+\noindent\textit{// Generate overlay}
+
+\begin{enumerate}
+  \setcounter{enumi}{16}
+  \item $H_{\text{color}} \leftarrow \text{applyColorMap}(H, \text{JET})$ \quad $\rhd$ Apply color map
+  \item $I_{\text{overlay}} \leftarrow 0.5 \cdot H_{\text{color}} + 0.5 \cdot I$ \quad $\rhd$ Blend with original
+  \item \textbf{Return:} $H$, $c^*$, $I_{\text{overlay}}$
+\end{enumerate}
 
 % === APPENDIX B ===
 \clearpage
 
 \section*{APPENDIX B}
 \addcontentsline{toc}{section}{APPENDIX B}
+\hypertarget{appendixb}{}
 
-\section*{Ablation Protocols}
+\noindent\textbf{Algorithm 2: Practical Multimodal Training Loop}
 
-Compare: (i) concatenation baseline vs UG-CMGF, (ii) with/without prototype loss, (iii) with/without selection head, (iv) uncertainty-free gates vs uncertainty-guided gates, and (v) image-only and text-only controls. Report discrimination, calibration, and deferral-quality metrics.
+\vspace{0.3cm}
+
+\noindent\textit{// Configuration:}
+
+\begin{enumerate}
+  \item Set device $\leftarrow$ CUDA if available, else CPU
+  \item Load MultimodalNet($num\_classes$)
+  \item Define $\mathcal{L}_{\text{CE}} \leftarrow \text{CrossEntropyLoss}()$
+  \item Define optimizer $\leftarrow \text{Adam}(\theta, \eta)$
+  \item Define scheduler $\leftarrow \text{ReduceLROnPlateau}(\text{mode}='\text{max}', \text{factor}=0.1, \text{patience}=2)$
+  \item Initialize $best\_val\_acc \leftarrow 0$
+\end{enumerate}
+
+\noindent\textit{// Main Training Loop:}
+
+\begin{enumerate}
+  \setcounter{enumi}{6}
+  \item \textbf{for} epoch $e = 1$ to $E$ \textbf{do}
+  
+  \vspace{0.1cm}
+  \noindent\textit{// Training phase}
+  
+  \begin{enumerate}
+    \item Set model to training mode
+    \item Initialize $\mathcal{L}_{\text{train}} \leftarrow 0$, $correct_{\text{train}} \leftarrow 0$
+    \item \textbf{for} each batch $(I, ids, mask, y)$ in $train\_loader$ \textbf{do}
+    \begin{enumerate}
+      \item Move $(I, ids, mask, y)$ to device
+      \item Reset optimizer gradients
+      \item $\hat{y} \leftarrow \text{model}(I, ids, mask)$ \quad $\rhd$ Forward pass
+      \item $\mathcal{L} \leftarrow \mathcal{L}_{\text{CE}}(\hat{y}, y)$
+      \item $\mathcal{L}.\text{backward}()$ \quad $\rhd$ Backward pass
+      \item optimizer.step()
+      \item Accumulate $\mathcal{L}_{\text{train}}$, $correct_{\text{train}}$
+    \end{enumerate}
+    \item \textbf{end for}
+    \item Compute $train\_loss$, $train\_acc$
+  \end{enumerate}
+  
+  \vspace{0.1cm}
+  \noindent\textit{// Validation phase}
+  
+  \begin{enumerate}
+    \setcounter{enumii}{9}
+    \item Set model to evaluation mode
+    \item Disable gradient computation
+    \item Initialize $\mathcal{L}_{\text{val}} \leftarrow 0$, $correct_{\text{val}} \leftarrow 0$
+    \item Initialize $all\_preds \leftarrow []$, $all\_labels \leftarrow []$
+    \item \textbf{for} each batch $(I, ids, mask, y)$ in $val\_loader$ \textbf{do}
+    \begin{enumerate}
+      \item Move $(I, ids, mask, y)$ to device
+      \item $\hat{y} \leftarrow \text{model}(I, ids, mask)$
+      \item $\mathcal{L} \leftarrow \mathcal{L}_{\text{CE}}(\hat{y}, y)$
+      \item Accumulate $\mathcal{L}_{\text{val}}$, $correct_{\text{val}}$
+      \item Append predictions to $all\_preds$
+      \item Append labels to $all\_labels$
+    \end{enumerate}
+    \item \textbf{end for}
+    \item Compute $val\_loss$, $val\_acc$
+  \end{enumerate}
+  
+  \vspace{0.1cm}
+  \noindent\textit{// Post-Validation Steps}
+  
+  \begin{enumerate}
+    \setcounter{enumii}{20}
+    \item scheduler.step($val\_acc$)
+    \item \textbf{if} $val\_acc > best\_val\_acc$ \textbf{then}
+    \begin{enumerate}
+      \item $best\_val\_acc \leftarrow val\_acc$
+      \item Save model.state\_dict() to disk
+      \item Generate classification\_report($all\_labels$, $all\_preds$)
+      \item Save $label\_encoder$ and $results\_dict$
+    \end{enumerate}
+    \item \textbf{end if}
+    \item \textbf{if} $val\_acc \geq target\_accuracy$ \textbf{then}
+    \begin{enumerate}
+      \item \textbf{break} \quad $\rhd$ Early stopping
+    \end{enumerate}
+    \item \textbf{end if}
+  \end{enumerate}
+  
+  \item \textbf{end for}
+  \item \textbf{Return:} Trained model with best validation accuracy
+\end{enumerate}
 
 \end{document}
