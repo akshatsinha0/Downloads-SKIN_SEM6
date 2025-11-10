@@ -64,7 +64,13 @@
 \tnotetext[fn1]{Under the supervision of Dr. Naga Priyadarshini R, Assistant Professor Sr. Grade 1, Department of Analytics, School of Computer Science and Engineering (SCOPE), VIT, India.}
 
 \begin{abstract}
-Skin cancer accounts for millions of cases annually, with melanoma responsible for a disproportionate share of mortality. This study presents a two‑stage multimodal assistant that fuses dermoscopic images with structured clinical metadata (age, sex, anatomic site) to deliver calibrated diagnostic probabilities and concise clinician‑style reports. The discriminative module combines CNN/efficient backbones (ResNet‑18, EfficientNet‑B0) with text encoders (BERT‑base, ClinicalBERT); embeddings are concatenated and classified with temperature scaling for probability calibration. On ISIC 2020 (melanoma vs nevus; 237 validation samples) the system attains 90.0\% validation accuracy; on HAM10000 (7 classes; 580 validation samples) the EfficientNet‑B0 + ClinicalBERT configuration achieves 86.12\% accuracy. Post‑hoc calibration yields Expected Calibration Error $<0.05$. The generative reporter converts predicted class, calibrated confidence, and salient cues into 150–200 word explanations with 87\% faithfulness to model attention. Single‑image latency is $<500$ ms on CPU and $\sim$100 ms on GPU. These results indicate that calibrated multimodal fusion improves discrimination and transparency over image‑only baselines, providing a practical path toward reliable dermatology decision support.
+Accurate differentiation of benign and malignant skin lesions remains challenging in routine care, where subjective judgment and time constraints can limit the consistent use of dermoscopy alongside patient context (age, sex, lesion site)~\cite{chatterjee2024,reddy2024}. We present a two-stage multimodal assistant that fuses dermoscopic imagery with structured clinical metadata to deliver calibrated class probabilities and generate concise, clinician-style explanations aimed at transparency and efficient documentation.
+
+In Stage 1 (diagnostic engine), a modern vision backbone encodes dermoscopic images while clinical metadata—rendered as short natural-language statements—is embedded by a medical text encoder~\cite{saeed2023}. The visual and textual representations are fused and passed to a calibrated softmax classifier to produce class probabilities for common lesion categories. Training uses large public cohorts with cross-dataset evaluation to assess reliability and generalization~\cite{wen2024}.
+
+In Stage 2 (generative engine), the predicted class, confidence, and salient cues are transformed into a controlled prompt for a large language model to produce a focused report~\cite{jutte2024}. The output states the most likely diagnosis, highlights visual and contextual evidence, lists plausible differentials, and, where appropriate, suggests next steps consistent with dermatology note conventions.
+
+We benchmark CNNs and Vision Transformers for imaging, compare general versus clinically pretrained text encoders, and run ablations on fusion and calibration, including single-modality controls. By combining strong discriminative performance with faithful, human-readable rationales, the system is designed to operate as a reliable second opinion and to support earlier melanoma detection within busy workflows~\cite{lasalvia2022}.
 \end{abstract}
 
 \begin{keywords}
@@ -85,29 +91,30 @@ Diagnostic accuracy
 
 % ================== Main content ==================
 \section{INTRODUCTION}
-Skin cancer represents one of the most prevalent malignancies worldwide, with melanoma accounting for approximately 75\% of skin cancer deaths despite comprising only 4\% of cases. Early detection significantly improves survival rates, with five-year survival exceeding 99\% for localized melanoma but dropping below 30\% for metastatic disease. Clinical assessment of pigmented lesions combines dermoscopic patterns with succinct patient context (age, sex, anatomic site)~\cite{tsai2024,thoviti2024}. However, current diagnostic workflows exhibit inter-observer variability ranging from 0.4 to 0.7 Cohen's kappa across studies, highlighting the need for reliable decision support systems.
-
-Single-modality systems often miss these complementary signals, and opaque predictions undermine clinician trust and adoption~\cite{reddy2025}. This work introduces a two-stage assistant for dermoscopy: (i) a diagnostic engine that fuses image and metadata embeddings to produce calibrated class probabilities, and (ii) a generative reporter that converts the prediction and context into a concise clinician-style note with justification, differentials, and suggested next steps~\cite{garciaespinosa2025}. In both design and evaluation, the emphasis is on accuracy, calibration, and auditability so the tool functions as a reliable second opinion without displacing clinical judgment. The proposed approach includes a modular training/evaluation protocol, an uncertainty-aware fusion variant, and a controlled prompting template that preserves faithfulness to the discriminative output.
+Clinical assessment of pigmented lesions combines dermoscopic patterns with succinct patient context (age, sex, anatomic site)~\cite{tsai2024,thoviti2024}. Single-modality systems often miss these complementary signals, and opaque predictions undermine clinician trust and adoption~\cite{reddy2025}. We introduce a two-stage assistant for dermoscopy: (i) a diagnostic engine that fuses image and metadata embeddings to produce calibrated class probabilities, and (ii) a generative reporter that converts the prediction and context into a concise clinician-style note with justification, differentials, and suggested next steps~\cite{garciaespinosa2025}. In both design and evaluation we emphasize accuracy, calibration, and auditability so the tool functions as a reliable second opinion without displacing clinical judgment. Contributions include a modular training/evaluation protocol, an uncertainty-aware fusion variant, and a controlled prompting template that preserves faithfulness to the discriminative output.
 
 \subsection{Background}
 Dermoscopy reveals morphological patterns (e.g., pigment networks, streaks, globules, vascular structures) that benefit from deep visual features, while age, sex, and lesion site shift pre-test probabilities and help disambiguate similar appearances~\cite{amgothu2025}. Multimodal learning unifies these signals via an image encoder for morphology and a text encoder for context, combined through a transparent fusion for classification~\cite{jutte2025bios}. Large public cohorts enable comprehensive training, cross-dataset validation, and error analysis by subgroups~\cite{wen2024}. Grounded generative models, when constrained by structured outputs and seeded with salient cues, can produce short, reviewable notes that surface the underlying rationale and improve documentation efficiency~\cite{udrea2017}.
 
 \subsection{Motivations}
 
-Earlier, more consistent triage requires calibrated probabilities paired with clear, structured wording that can be reused in clinical notes and referrals. Traditional AI diagnostic tools often produce uncalibrated outputs, making it difficult for clinicians to interpret prediction confidence and integrate results into decision-making workflows. In contrast, the proposed approach emphasizes probabilistic calibration, ensuring that model-predicted likelihoods align with empirical outcome frequencies, which is crucial for risk-sensitive domains such as dermatology.
 
-A modular two-stage design—where encoders and reporters function as separable but interoperable units—provides both theoretical and operational advantages. From a theoretical perspective, modularity aligns with the principle of composability in neural architectures, allowing independent optimization of representation learning (in the encoder) and linguistic realization (in the reporter). This decoupling reduces catastrophic interference between modalities and enables continuous model improvement without retraining the entire system. Practically, it simplifies auditability, supports incremental deployment, and maintains compatibility with established clinical documentation pipelines.
 
-Moreover, by explicitly logging intermediate reasoning steps and exposing uncertainty estimates, the system facilitates both interpretability and accountability. Uncertainty quantification—through entropy measures or Bayesian approximations—allows clinicians to adjust decision thresholds dynamically based on confidence, enhancing patient safety and model reliability. In this way, the system not only performs triage but also functions as an explainable collaborator that supports data-driven quality improvement and calibrated clinical decision-making.
+Previously, more consistent classification required carefully calculated probabilities paired with clear, structured wording that can be reused in clinical notes and referrals. Older AI tools used for diagnosis usually produce inaccurate results, creating complications for clinicians while interpreting prediction confidence and incorporating findings into decision-making processes.
+This work, in contrast, focuses on probabilistic calibration, which ensures that model-predicted likelihoods match empirical outcome frequencies. This is a critical aspect of fields where risk is a major factor, like dermatology.
+
+There are theoretical and practical benefits to a modular two-stage design where reporters and encoders operate as independent but complementary units. Theoretically, modularity is consistent with the composability principle of neural architecture, enabling separate optimization of linguistic realization, in the reporter, and representation learning in the encoder. This decoupling allows for ongoing model improvement without retraining the entire system and lessens catastrophic interference between modalities. In actual use, it preserves compatibility with well-established clinical documentation pipelines, facilitates incremental deployment, and simplifies auditability.
+
+Furthermore, the assistant provides accountability and interpretability through the process of clearly recording intermediate reasoning steps and disclosing uncertainty estimates. Physicians can dynamically modify decision thresholds according to confidence, improving model reliability and patient safety, by quantifying uncertainty using entropy measures or Bayesian approximations. In this sense, the system serves as an explainable collaborator that facilitates data-driven quality improvement and clinical decision-making that is calibrated, in addition to performing classification.
 
 
 \subsection{Problem Definition and Research Gap}
 
-Skin cancer represents one of the most prevalent malignancies worldwide, with melanoma accounting for approximately 75\% of skin cancer deaths despite comprising only 4\% of cases~\cite{kalaivani2024}. Early detection significantly improves survival rates, with five-year survival exceeding 99\% for localized melanoma but dropping below 30\% for metastatic disease~\cite{mutepfe2021}. Current diagnostic workflows rely heavily on visual inspection and dermoscopy, techniques that demand specialized training and exhibit inter-observer variability ranging from 0.4 to 0.7 Cohen's kappa across studies~\cite{innani2023}.
+Skin cancer is one of the most deadly diseases worldwide, with melanoma accounting for nearly three-fourths of skin cancer deaths despite comprising only 4\% of cases~\cite{kalaivani2024}. Early detection has greatly increased survival rates, with five-year survival exceeding 99\% for localized melanoma but dropping below 30\% for metastatic disease~\cite{mutepfe2021}. Visual inspection and dermoscopy, which require specific training and have inter-observer variability ranging from 0.4 to 0.7 Cohen's kappa across studies, are major components of current diagnostic workflows.~\cite{innani2023}.
 
-Existing computer-aided diagnosis systems predominantly adopt single-modality approaches, processing dermoscopic images through convolutional neural networks or vision transformers while ignoring readily available clinical metadata. This design choice creates three fundamental gaps. First, image-only models fail to leverage epidemiological priors encoded in patient demographics and lesion location, information that dermatologists routinely integrate into diagnostic reasoning. Second, most systems produce point predictions without calibrated confidence estimates, making it difficult for clinicians to assess reliability and appropriately weight algorithmic suggestions. Third, the absence of structured explanations limits clinical adoption, as practitioners require transparent rationales that align with established diagnostic frameworks such as the ABCDE rule (Asymmetry, Border irregularity, Color variation, Diameter, Evolution).
+The bulk of the currently used computer-aided diagnosis systems employ single-modality techniques, processing dermoscopic images using vision transformers or convolutional neural networks while disregarding easily accessible clinical metadata. Three basic gaps are created by the design decision. First, epidemiological priors encoded in lesion location and patient demographics are not utilized by image-only models. Second, the majority of systems generate point predictions without calibrated confidence estimates, which makes it challenging for clinicians to evaluate algorithmic recommendations and determine their reliability. Third, clinical adoption is hindered by the lack of structured explanations because practitioners need clear justifications that conform to accepted diagnostic frameworks like the ABCDE rule (Asymmetry, Border irregularity, Color variation, Diameter, Evolution).
 
-Recent advances in multimodal learning and large language models create an opportunity to address these gaps through architectures that jointly process visual and textual inputs while generating human-interpretable explanations. However, existing multimodal approaches in dermatology remain limited in scope, often treating metadata as auxiliary features rather than equal partners in the diagnostic process, and rarely provide mechanisms for uncertainty quantification or selective prediction that would enable safe deployment in clinical settings.
+Large language models and recent developments in multimodal learning offer a chance to fill the aforementioned gaps by developing architectures that process textual and visual inputs simultaneously and produce explanations that are understandable by humans.  However, the scope of current multimodal approaches in dermatology is still restricted, because they frequently treat metadata as auxiliary features rather than as equal partners in the diagnostic process, and they hardly ever offer mechanisms for selective prediction or uncertainty quantification that would allow for safe deployment in clinical settings. 
 
 \subsection{Need and Justification for the Study}
 
@@ -129,7 +136,7 @@ The primary objective of this research is to develop and validate a multimodal g
 
 \textbf{Objective 3: Generative Explanation Synthesis.} Create a controlled prompting framework that transforms structured model outputs into concise clinical reports. Reports must include diagnosis, visual and contextual justification, differential diagnoses, and suggested next steps, all within 150-200 words. Validate explanation faithfulness through alignment metrics between generated text and model attention patterns.
 
-\textbf{Objective 4: Cross-Dataset Generalization.} Assess model resilience through external validation on HAM10000 after training on ISIC 2019/2020. Target performance degradation of less than 5\% AUROC, with subgroup analysis by anatomic site, patient demographics, and image acquisition device to identify potential biases.
+\textbf{Objective 4: Cross-Dataset Generalization.} Assess model resilience through out-of-distribution evaluation on ISIC 2018 after training on ISIC 2019/2020. Target performance degradation of less than 5\% AUROC, with subgroup analysis by anatomic site, patient demographics, and image acquisition device to identify potential biases.
 
 \textbf{Objective 5: Clinical Deployment Readiness.} Package the system as a lightweight inference service with single-image latency below 500 ms on CPU and 100 ms on GPU. Implement comprehensive logging, version control, and rollback mechanisms to support safe deployment and continuous monitoring in clinical environments.
 
@@ -143,65 +150,64 @@ Out of scope: histopathology, non-dermoscopic photographs, longitudinal follow-u
 
 This work makes four principal contributions to the intersection of medical imaging, multimodal learning, and clinical AI:
 
-\textbf{Contribution 1: Uncertainty-Guided Cross-Modal Gated Fusion (UG-CMGF).} The proposed approach introduces a novel fusion architecture that learns per-sample gating coefficients based on modality-specific uncertainty estimates. Unlike fixed-weight fusion schemes, UG-CMGF adapts to input characteristics, down-weighting noisy or missing metadata while elevating reliable contextual signals. The gating mechanism is regularized through a complementarity constraint and prototype alignment loss, ensuring stable training and interpretable fusion decisions. Ablation studies demonstrate that UG-CMGF improves AUROC by 3.2\% over concatenation baselines and reduces calibration error by 28\%.
+\textbf{Contribution 1: Uncertainty-Guided Cross-Modal Gated Fusion (UG-CMGF).} We introduce a novel fusion architecture that learns per-sample gating coefficients based on modality-specific uncertainty estimates. Unlike fixed-weight fusion schemes, UG-CMGF adapts to input characteristics, down-weighting noisy or missing metadata while elevating reliable contextual signals. The gating mechanism is regularized through a complementarity constraint and prototype alignment loss, ensuring stable training and interpretable fusion decisions. Ablation studies demonstrate that UG-CMGF improves AUROC by 3.2\% over concatenation baselines and reduces calibration error by 28\%.
 
-\textbf{Contribution 2: Integrated Calibration and Selective Prediction.} The proposed framework develops a unified approach that combines temperature scaling for probability calibration with a learned selection head for deferral decisions. The selection head is trained using a confidence-correctness objective that balances coverage and error reduction. On ISIC validation sets, the proposed approach achieves ECE of 0.042 while deferring 12\% of cases that contain 64\% of classification errors, substantially outperforming threshold-based deferral strategies.
+\textbf{Contribution 2: Integrated Calibration and Selective Prediction.} We develop a unified framework that combines temperature scaling for probability calibration with a learned selection head for deferral decisions. The selection head is trained using a confidence-correctness objective that balances coverage and error reduction. On ISIC validation sets, our approach achieves ECE of 0.042 while deferring 12\% of cases that contain 64\% of classification errors, substantially outperforming threshold-based deferral strategies.
 
-\textbf{Contribution 3: Faithful Generative Reporting.} The system design incorporates a structured prompting template that grounds explanation generation in model internals, including predicted class, calibrated confidence, gating coefficients, and nearest class prototypes. This approach ensures that generated text reflects actual model reasoning rather than hallucinated justifications. Faithfulness metrics show 87\% alignment between generated explanations and model attention patterns, compared to 52\% for unconstrained generation.
+\textbf{Contribution 3: Faithful Generative Reporting.} We design a structured prompting template that grounds explanation generation in model internals, including predicted class, calibrated confidence, gating coefficients, and nearest class prototypes. This approach ensures that generated text reflects actual model reasoning rather than hallucinated justifications. Faithfulness metrics show 87\% alignment between generated explanations and model attention patterns, compared to 52\% for unconstrained generation.
 
-\textbf{Contribution 4: Comprehensive Multimodal Benchmark.} The study provides extensive ablations across encoder architectures (ResNet-18, EfficientNet-B0), text encoders (BERT-base, ClinicalBERT), fusion strategies (concatenation-based), and evaluation on multiple datasets. All experiments use fixed random seeds, patient-level splits, and reproducible protocols. The implementation achieves 90\% accuracy on ISIC binary classification (melanoma vs nevus) and 86.12\% accuracy on HAM10000 7-class classification, demonstrating effective multimodal fusion across different dataset characteristics and class distributions.
+\textbf{Contribution 4: Comprehensive Multimodal Benchmark.} We provide extensive ablations across encoder architectures (ResNet-18, EfficientNet-B0), text encoders (BERT-base, ClinicalBERT), fusion strategies (concatenation-based), and evaluation on multiple datasets. All experiments use fixed random seeds, patient-level splits, and reproducible protocols. Our implementation achieves 90\% accuracy on ISIC binary classification (melanoma vs nevus) and 86.12\% accuracy on HAM10000 7-class classification, demonstrating effective multimodal fusion across different dataset characteristics and class distributions.
 
 \subsection{Organization of the Paper}
 
-The remainder of this paper is structured as follows. Section 2 presents a comprehensive literature review covering dermoscopic image analysis, multimodal fusion techniques, calibration methods, and explainable AI in medical imaging. Section 3 describes the methodology, including dataset preparation, model architectures, training protocols, and evaluation metrics. Section 4 details the system design, covering the two-stage pipeline architecture, component interfaces, and deployment considerations. Section 5 reports experimental results, including baseline comparisons, ablation studies, calibration analysis, and qualitative examples. Section 6 concludes with a summary of findings, discussion of limitations, and directions for future work. The appendix provides mathematical details of the UG-CMGF algorithm and additional ablation protocols.
+ Section 2 provides a thorough review and survey of the literature on medical imaging topics such as explainable AI, multimodal fusion techniques, calibration methods, and dermoscopic image analysis. Section 3 describes the methodology used, including dataset preparation, model architectures, training protocols, and evaluation metrics. Section 4 details the system design, covering the two-stage pipeline architecture, component interfaces, and deployment considerations. Section 5 reports experimental results, including baseline comparisons, ablation studies, calibration analysis, and qualitative examples. Section 6 concludes with a summary of findings, discussion of limitations, and directions for future work. The appendix provides mathematical details of the UG-CMGF algorithm and additional ablation protocols.
 
 
 % === Section 2: LITERATURE SURVEY ===
 \section{LITERATURE SURVEY}
 
-This section synthesizes research across five interconnected domains: dermoscopic image analysis, multimodal learning in medical imaging, calibration and uncertainty quantification, explainable AI for clinical decision support, and generative models for medical text synthesis. This review identifies methodological strengths and limitations in each area, establishes theoretical foundations, and articulates gaps that motivate the proposed approach.
+This section synthesizes research across five intertwined domains: dermoscopic image analysis, multimodal learning in medical imaging, calibration and uncertainty quantification, explainable AI for clinical decision support, and generative models for medical text synthesis. This section of the work aims to identify methodological strengths and limitations in each area, establish theoretical foundations, and articulate the gaps that motivate the chosen approach.
 
 \subsection{Dermoscopic Image Analysis and Deep Learning}
 
-Automated skin lesion classification has evolved through three distinct phases~\cite{masood2024}. Early systems relied on hand-crafted features derived from clinical heuristics such as the ABCDE rule and the 7-point checklist~\cite{rao2025}. These methods extracted geometric descriptors (asymmetry indices, border irregularity measures), color statistics (mean RGB values, color variegation scores), and texture features (local binary patterns, Gabor filter responses). While interpretable, hand-crafted approaches achieved modest accuracy (70-80\%) and required extensive domain engineering.
+Automated skin lesion classification has gone through multiple phases and as a result, evolved ~\cite{masood2024}. Previously designed systems heavily employed hand-crafted features derived from clinical heuristics much like the ABCDE rule and the 7-point checklist~\cite{rao2025}. These techniques extracted texture features (local binary patterns, Gabor filter responses), color statistics (mean RGB values, color variegation scores), and geometric descriptors (asymmetry indices, border irregularity measures). While they were interpretable, hand-crafted methods required quite a bit of domain engineering and in the end, was only able to  achieve a mediocre level of accuracy (70–80\%).
 
-The advent of convolutional neural networks marked a paradigm shift~\cite{bissoto2020}. Deep learning models trained on large clinical image datasets achieved dermatologist-level performance on melanoma classification, with AUROC exceeding 0.91~\cite{bissoto2018}. Subsequent work explored architectural innovations: DenseNet-121 connections improved gradient flow and feature reuse, achieving 0.93 AUROC on ISIC 2018~\cite{marques2024}. EfficientNet architectures balanced accuracy and efficiency through compound scaling, reaching 0.94 AUROC with significantly fewer parameters~\cite{salvi2022}. Ensemble methods combining multiple CNN architectures further pushed performance, with top ISIC challenge submissions exceeding 0.95 AUROC through weighted averaging of multiple models~\cite{alrasheed2022}.
+The dawn of convolutional neural networks marked a paradigm shift~\cite{bissoto2020} in the world of Generative AI. Deep learning models trained on large clinical image datasets achieved dermatologist-level performance on melanoma classification, with AUROC exceeding 0.91~\cite{bissoto2018}. Subsequent work explored architectural innovations: DenseNet-121 connections improved gradient flow and feature reuse, achieving 0.93 AUROC on ISIC 2018~\cite{marques2024}. EfficientNet architectures balanced accuracy and efficiency through compound scaling, reaching 0.94 AUROC with significantly fewer parameters~\cite{salvi2022}. Performance was further improved by groups of approaches that combined multiple CNN architectures; top ISIC challenge submissions that used weighted averaging of multiple models exceeded 0.95 AUROC.~\cite{alrasheed2022}.
 
-Vision transformers introduced self-attention mechanisms that capture long-range spatial dependencies~\cite{veeramani2025}. ViT models pretrained on ImageNet-21k and fine-tuned on ISIC 2019 achieved 0.96 AUROC, outperforming CNN baselines by 2-3\%~\cite{wang2023}. The attention mechanism proved particularly effective for identifying subtle patterns distributed across the lesion, such as irregular pigment networks and atypical vascular structures~\cite{ravindranath2025}. However, ViTs require larger training sets and longer convergence times, with computational costs 3-4x higher than equivalent CNNs.
+Vision transformers introduced self-attention mechanisms that capture long-range spatial dependencies~\cite{veeramani2025}. ViT models pretrained on ImageNet-21k and fine-tuned on ISIC 2019 achieved 0.96 AUROC, outperforming CNN baselines by 2-3\%~\cite{wang2023}. The attention mechanism worked especially well for spotting minute patterns scattered throughout the lesion, like atypical vascular structures and irregular pigment networks~\cite{ravindranath2025}. However, ViTs require larger training sets and longer convergence times, with computational costs 3-4x higher than equivalent CNNs.
 
-Despite these advances, image-only approaches face fundamental limitations~\cite{abbasi2024deep}. Dermoscopic appearance alone cannot disambiguate certain lesion pairs: seborrheic keratosis and melanoma can exhibit similar pigmentation patterns, while amelanotic melanoma lacks the color cues that CNNs rely upon~\cite{medi2021skinaid}. These ambiguities motivate multimodal approaches that incorporate clinical context~\cite{farooq2024dermt2im}.
+Despite these developments, image-only methods still have serious drawbacks~\cite{abbasi2024deep}. Certain lesion pairs cannot be distinguished by dermoscopic appearance alone: amelanotic melanoma lacks the color cues that CNNs rely on, while seborrheic keratosis and melanoma can display similar pigmentation patterns~\cite{medi2021skinaid}. These uncertainties drive multimodal strategies that take clinical context into account.~\cite{farooq2024dermt2im}.
 
 \subsection{Multimodal Learning in Medical Imaging}
+To improve the accuracy and stability of medical diagnosis, multimodal learning integrates various data types~\cite{rao2025synthetic}.  In pathology, combining tissue images with genetic data increased cancer subtype accuracy by 12%~\cite{burlina2020ai}, while in radiology, combining CT scans and clinical notes improved lung cancer prediction by 7% AUROC when compared to using images alone.  These findings demonstrate how structured data, such as patient information, can help close the gaps left by image data alone.
 
-Multimodal learning integrates complementary data sources to improve diagnostic accuracy and stability~\cite{rao2025synthetic}. In radiology, combining CT scans with clinical notes improved lung nodule malignancy prediction by 7\% AUROC over imaging alone. In pathology, fusing whole-slide images with genomic data enhanced cancer subtype classification by 12\% accuracy~\cite{burlina2020ai}. These successes demonstrate that structured metadata provides orthogonal information that resolves ambiguities in visual data.
+Numerous studies have researched into the use of metadata in dermatology~\cite{tschandl2018ham10000}.  Melanoma detection has increased by 4\% AUROC~\cite{codella2019skin} when basic patient information like age, sex, and body location is added to image features.  Some studies achieved a 5.2\% gain by using BERT to convert this metadata into brief text descriptions that were then combined with image features.  Additionally, models are now more equitable thanks to the use of metadata, which has reduced performance disparities between skin tones by roughly 30%.
 
-In dermatology, several studies have explored metadata integration~\cite{tschandl2018ham10000}. Recent work has concatenated image CNN features with one-hot encoded age, sex, and anatomic site, improving melanoma detection by 4\% AUROC~\cite{codella2019skin}. Other approaches embedded metadata as natural language sentences using BERT, then fused text embeddings with image features through element-wise multiplication, achieving 5.2\% AUROC gain. Studies have demonstrated that metadata particularly benefits underrepresented subgroups, reducing performance disparities across skin tones by 30\%.
+There are various ways to combine data.  All inputs are mixed at the start of early fusion, which makes training more difficult but enables the model to learn joint patterns.  While the final results from each data source are kept distinct, deeper connections are lost due to late fusion.  While attention-based fusion assigns greater weight to the most crucial inputs—albeit these weights can be challenging to interpret—intermediate fusion combines data midway through the process for better balance.
 
-Fusion strategies span a spectrum of complexity. Early fusion concatenates raw inputs before processing, enabling joint feature learning but increasing dimensionality and training instability. Late fusion combines modality-specific predictions through weighted averaging or stacking, preserving modality independence but missing cross-modal interactions. Intermediate fusion operates on learned representations, balancing flexibility and computational cost. Attention-based fusion learns dynamic weights for each modality, but attention scores often lack interpretability and may not reflect causal importance.
+The state-of-the-art is represented by cross-modal transformers, which use self-attention across modalities to capture intricate interactions. However, these architectures require massive datasets (100k+ samples) and rigorous and detailed hyperparameter tuning, limiting applicability in medical domains with smaller cohorts. Additionally, transformer fusion mechanisms remain opaque, complicating clinical validation and regulatory approval.
 
-Cross-modal transformers represent the current frontier, applying self-attention across modalities to capture complex interactions. However, these architectures require massive datasets (100k+ samples) and extensive hyperparameter tuning, limiting applicability in medical domains with smaller cohorts. Furthermore, transformer fusion mechanisms remain opaque, complicating clinical validation and regulatory approval.
-
-A critical gap in existing multimodal work is the absence of uncertainty-aware fusion. Current methods apply fixed fusion weights regardless of input quality, failing to down-weight noisy or missing metadata. The proposed UG-CMGF mechanism addresses this limitation by learning per-sample gates conditioned on modality-specific uncertainty estimates.
+A critical gap in existing multimodal work is the absence of uncertainty-aware fusion. Current methods apply fixed fusion weights regardless of input quality, failing to down-weight noisy or missing metadata. 
 
 \subsection{Calibration and Uncertainty Quantification}
 
-Calibration ensures that predicted probabilities align with empirical frequencies: among cases assigned 80\% confidence, approximately 80\% should be correct. Medical AI systems often exhibit poor calibration, with neural networks tending toward overconfidence due to optimization for discriminative loss functions that do not penalize miscalibration.
+Calibration aims to ensure that predicted probabilities align with observed frequencies: among cases assigned 80\% confidence, approximately 80\% should be correct. Medical AI systems often exhibit poor calibration, with neural networks tending toward overconfidence due to optimization for discriminative loss functions that do not penalize miscalculation.
 
-Temperature scaling applies a learned scalar $T$ to logits before softmax: $p_i = \exp(z_i/T) / \sum_j \exp(z_j/T)$. This single-parameter method reduces expected calibration error (ECE) by 50-70\% on ImageNet while preserving accuracy. Platt scaling fits a logistic regression on validation set predictions, providing class-specific calibration. Isotonic regression learns a non-parametric monotonic mapping, offering greater flexibility at the cost of overfitting risk on small validation sets.
+Temperature scaling applies a learned scalar $T$ to logits before softmax: $p_i = \exp(z_i/T) / \sum_j \exp(z_j/T)$. This single-parameter method reduces expected calibration error by 50-70\% on ImageNet while preserving accuracy. Platt scaling fits a logistic regression on validation set predictions, providing class-specific calibration. Isotonic regression learns a non-parametric monotonic mapping, offering greater flexibility at the cost of overfitting risk on small validation sets.
 
 In medical imaging, calibration is particularly critical for risk stratification and treatment planning. Studies have shown that uncalibrated chest X-ray models assigned 90\% confidence to 40\% of errors, leading to dangerous overreliance. Calibrated models enabled reliable thresholding, with 95\% confidence predictions achieving 98\% precision.
 
 Uncertainty quantification extends calibration by distinguishing aleatoric uncertainty (inherent data noise) from epistemic uncertainty (model ignorance). Bayesian neural networks and Monte Carlo dropout estimate epistemic uncertainty through weight distributions, but incur 10-100x computational overhead. Evidential deep learning parameterizes Dirichlet distributions over class probabilities, enabling single-forward-pass uncertainty estimation with 2-3\% accuracy cost.
 
-Selective prediction leverages uncertainty to defer ambiguous cases to human experts. Research has shown that deferring 10\% of samples based on maximum softmax probability can reduce error rate by 40\%. In medical imaging, learned selection functions outperform threshold-based deferral by 15-20\%, as they capture complex patterns of model failure beyond simple confidence scores.
+Selective prediction leverage uncertainty to defer ambiguous cases to human experts. Research has shown that deferring 10\% of samples based on maximum softmax probability can reduce error rate by 40\%. In medical imaging, learned selection functions outperform threshold-based deferral by 15-20\%, as they capture complex patterns of model failure beyond simple confidence scores.
 
-This work integrates temperature scaling for calibration with a learned selection head for deferral, trained jointly with the classifier to optimize coverage-error trade-offs. This unified approach achieves superior performance compared to post-hoc threshold tuning.
+Our work integrates temperature scaling for calibration with a learned selection head for deferral, trained jointly with the classifier to optimize coverage-error trade-offs. This unified approach achieves superior performance compared to post-hoc threshold tuning.
 
 \subsection{Explainable AI in Clinical Decision Support}
 
-Explainability in medical AI serves three purposes: building clinician trust, enabling error diagnosis, and satisfying regulatory requirements. Explanation methods divide into post-hoc techniques that analyze trained models and intrinsic approaches that build interpretability into model architecture.
+Three goals of explainability in medical AI are to increase clinician trust, facilitate error diagnosis, and meet legal requirements.  The two categories of explanation techniques are intrinsic approaches, which incorporate interpretability into the model architecture, and post-hoc techniques, which examine trained models.
 
-Post-hoc methods include saliency maps (Grad-CAM, integrated gradients) that highlight image regions influencing predictions. While visually intuitive, saliency maps suffer from low faithfulness: research has shown that many attribution methods produce similar visualizations for trained and random networks, indicating they reflect model architecture rather than learned features. Furthermore, saliency maps provide spatial localization but no semantic interpretation, leaving clinicians to infer diagnostic reasoning.
+ Saliency maps (Grad-CAM, integrated gradients) are post-hoc techniques that highlight areas of an image that affect predictions. Saliency maps have low faithfulness despite being aesthetically intuitive; studie have revealed that many attribution techniques result in visualizations that are similar for trained and random networks, suggesting that they represent model architecture rather than learned features. Furthermore, saliency maps provide spatial localization but no semantic interpretation, leaving clinicians to infer diagnostic reasoning.
 
 Concept-based explanations map model activations to human-interpretable concepts (e.g., "irregular border," "blue-white veil"). Testing with Concept Activation Vectors (TCAV) measures concept importance through directional derivatives in activation space. However, concept definitions require expert annotation, and concept importance scores may not reflect causal relationships.
 
@@ -209,7 +215,7 @@ Prototype-based methods learn representative examples for each class, then expla
 
 Natural language explanations offer the most flexible format, generating free-text rationales that describe diagnostic reasoning. Early approaches used template filling, inserting predicted classes and confidence scores into fixed sentence structures. Recent work applies large language models (LLMs) to generate fluent explanations, but unconstrained generation often produces hallucinations: plausible-sounding text that contradicts model internals. Studies have found that a significant percentage of LLM-generated medical explanations contain factual errors when not grounded in structured data.
 
-The approach addresses faithfulness through controlled prompting: prompts are constructed from structured model outputs (predicted class, calibrated confidence, gating coefficients, nearest prototypes) and generation is constrained through explicit guardrails. This design ensures that generated text reflects actual model reasoning while maintaining natural language fluency.
+Our approach addresses faithfulness through controlled prompting: we construct prompts from structured model outputs (predicted class, calibrated confidence, gating coefficients, nearest prototypes) and constrain generation through explicit guardrails. This design ensures that generated text reflects actual model reasoning while maintaining natural language fluency.
 
 \subsection{Generative Models for Medical Text Synthesis}
 
@@ -221,24 +227,24 @@ Retrieval-augmented generation (RAG) grounds LLM outputs in external knowledge b
 
 Structured generation constrains LLM outputs to follow predefined schemas, ensuring completeness and consistency. Constrained decoding algorithms enforce format requirements during beam search, guaranteeing that generated text includes required sections (diagnosis, justification, differentials, recommendations). Structured generation reduces missing information errors by 80\% while maintaining fluency scores above 4.2/5.0 in human evaluations.
 
-The generative reporting module combines domain-adapted language models with structured prompting and constrained decoding. Prompts are built from model internals (class, confidence, gates, prototypes) and a fixed report schema is enforced (diagnosis, justification, differentials, next steps). This approach achieves 87\% faithfulness while generating clinically useful reports in 150-200 words.
+Our generative reporting module combines domain-adapted language models with structured prompting and constrained decoding. We construct prompts from model internals (class, confidence, gates, prototypes) and enforce a fixed report schema (diagnosis, justification, differentials, next steps). This approach results in 87\% faithfulness, and generates clinically useful reports about 150-200 words in length.
 
 \subsection{Synthesis and Research Gaps}
 
-The literature reveals substantial progress in individual components—image classification, multimodal fusion, calibration, explainability, and text generation—but limited integration into cohesive clinical systems. Existing multimodal dermatology systems rarely provide calibrated confidence estimates, and those with explanation capabilities often rely on unfaithful post-hoc methods. Generative reporting remains largely unexplored in dermatology, with most work focusing on radiology report generation.
+Significant advancements have been made in image classification, multimodal fusion, calibration, explainability, and text generation, according to the literature, but there has been little integration of these components into coherent clinical systems.  There are currently very few multimodal dermatology systems that provide calibrated confidence estimates, and those that do often rely on deceptive post-hoc methods. The majority of research in dermatology has focused on radiology report generation, leaving generative reporting largely unexplored.
 
-Five specific gaps motivate this approach: (1) absence of uncertainty-aware fusion mechanisms that adapt to input quality, (2) lack of integrated calibration and selective prediction frameworks, (3) limited faithfulness in generated explanations, (4) insufficient cross-dataset evaluation to assess generalization, and (5) incomplete consideration of deployment requirements such as latency and monitoring. This work addresses these gaps through a modular two-stage architecture that combines discriminative accuracy with faithful explanation generation, validated through comprehensive ablations and out-of-distribution testing.
+Five specific research gaps motivates the approach of this work: (1) absence of uncertainty-aware fusion mechanisms that adapt to input quality, (2) lack of integrated calibration and selective prediction frameworks, (3) limited faithfulness in generated explanations, (4) insufficient cross-dataset evaluation to assess generalization, and (5) incomplete consideration of deployment requirements such as latency and monitoring. This work addresses these gaps through a modular two-stage architecture that combines discriminative accuracy with faithful explanation generation, validated through comprehensive ablations and out-of-distribution testing.
 
 
 % === Section 4: METHODOLOGY  ===
 \section{METHODOLOGY}
 
-This section details datasets and governance, preprocessing, model components, training and evaluation protocol, and a proposed algorithmic improvement that augments fusion, calibration, and explanation quality. The design favors simple, auditable, and reproducible choices; when added complexity is introduced (e.g., gated fusion), ablations and clear fallback baselines are provided. Subsections are arranged for replication and traceability to experiments and deliverables.
+This section details datasets and governance, preprocessing, model components, training and evaluation protocol, and a proposed algorithmic improvement that augments fusion, calibration, and explanation quality. We favor simple, auditable, and reproducible choices; when added complexity is introduced (e.g., gated fusion), we provide ablations and clear fallback baselines. Subsections are arranged for replication and traceability to experiments and deliverables.
 
 \subsection{Datasets and Governance}
 
 \begin{itemize}
-  \item Create patient-level stratified Train/Val/Test splits on ISIC 2019/2020; use HAM10000 as an external validation set.
+  \item Create patient-level stratified Train/Val/Test splits on ISIC 2019/2020; reserve ISIC 2018 as an external out-of-distribution set.
   \item Use de-identified metadata (age, sex, anatomic site); represent missing fields explicitly (e.g., ``site: unknown'').
   \item Document licenses, inclusion/exclusion criteria, transforms, and class definitions; version all datasets and configs.
 \end{itemize}
@@ -272,47 +278,43 @@ This section details datasets and governance, preprocessing, model components, t
 
 \subsection{Novel Algorithmic Improvement: Uncertainty-Guided Cross-Modal Gated Fusion with Prototype Alignment}
 
-UG-CMGF, an uncertainty-aware gating mechanism, is introduced to balance image and metadata features per case and align the joint embedding to class prototypes. A selection head defers low-confidence cases to improve safety. The design preserves the simple concatenation baseline as a fallback while improving reliability and providing grounded signals for the report. Gates are resilient to missing metadata and are regularized to remain complementary.
+We introduce UG-CMGF, an uncertainty-aware gating mechanism that balances image and metadata features per case and aligns the joint embedding to class prototypes. A selection head defers low-confidence cases to improve safety. The design preserves the simple concatenation baseline as a fallback while improving reliability and providing grounded signals for the report. Gates are resilient to missing metadata and are regularized to remain complementary.
 
 \subsubsection{Mathematical Formulation}
 
-Let $I \in \mathbb{R}^{H \times W \times 3}$ denote a dermoscopic image where $H$ and $W$ are height and width dimensions (512$\times$512 for ISIC, 224$\times$224 for HAM10000) and 3 represents RGB color channels. This tensor representation captures the raw pixel intensities across red, green, and blue channels, providing the visual input for morphological feature extraction. Let $M = \{a, s, l\}$ represent clinical metadata where $a \in \mathbb{R}^+$ is patient age in years, $s \in \{\text{male}, \text{female}\}$ is biological sex, and $l \in \mathcal{L}$ is anatomic location from a predefined set (e.g., face, trunk, extremities). These metadata fields encode epidemiological priors that influence lesion diagnosis in clinical practice. 
-
-The image encoder $\phi_{\text{img}}: \mathbb{R}^{H \times W \times 3} \rightarrow \mathbb{R}^{d}$ (implemented as ResNet-18 or EfficientNet-B0) and text encoder $\phi_{\text{text}}: \mathcal{M} \rightarrow \mathbb{R}^{d}$ (implemented as BERT-base or ClinicalBERT) produce fixed-dimensional embeddings:
+Let $I \in \mathbb{R}^{H \times W \times 3}$ denote a dermoscopic image and $M = \{a, s, l\}$ represent metadata (age $a \in \mathbb{R}^+$, sex $s \in \{\text{male}, \text{female}\}$, anatomic location $l \in \mathcal{L}$). The image encoder $\phi_{\text{img}}: \mathbb{R}^{H \times W \times 3} \rightarrow \mathbb{R}^{d}$ and text encoder $\phi_{\text{text}}: \mathcal{M} \rightarrow \mathbb{R}^{d}$ produce embeddings:
 \begin{align}
 z_{\text{img}} &= \phi_{\text{img}}(I) \in \mathbb{R}^{d}, \\
 z_{\text{text}} &= \phi_{\text{text}}(\text{template}(M)) \in \mathbb{R}^{d},
 \end{align}
-where $d=512$ is the embedding dimension used in the implemented system, and $\text{template}(M)$ converts structured metadata to natural language (e.g., "Male, 62 years, upper back"). These equations define the encoding process that transforms raw inputs into fixed-dimensional feature vectors. The image encoder $\phi_{\text{img}}$ applies convolutional or attention-based operations to extract hierarchical visual features representing dermoscopic patterns such as pigment networks, border irregularities, and color variations. The text encoder $\phi_{\text{text}}$ processes tokenized metadata sentences through transformer layers to capture semantic relationships between clinical attributes. These embeddings capture visual morphology ($z_{\text{img}}$) and clinical context ($z_{\text{text}}$) in a shared semantic space, enabling multimodal fusion.
+where $\text{template}(M)$ converts metadata to natural language (e.g., "Male, 62 years, upper back").
 
-Uncertainty estimation heads $u_{\text{img}}: \mathbb{R}^{d} \rightarrow \mathbb{R}^+$ and $u_{\text{text}}: \mathbb{R}^{d} \rightarrow \mathbb{R}^+$ (implemented as lightweight 2-layer MLPs) compute modality-specific uncertainties:
+Uncertainty estimation heads $u_{\text{img}}: \mathbb{R}^{d} \rightarrow \mathbb{R}^+$ and $u_{\text{text}}: \mathbb{R}^{d} \rightarrow \mathbb{R}^+$ compute modality-specific uncertainties:
 \begin{align}
 \sigma_{\text{img}} &= u_{\text{img}}(z_{\text{img}}), \\
 \sigma_{\text{text}} &= u_{\text{text}}(z_{\text{text}}).
 \end{align}
-These equations compute uncertainty scores that quantify the reliability of each modality for a given input. The uncertainty heads $u_{\text{img}}$ and $u_{\text{text}}$ are implemented as two-layer multi-layer perceptrons (MLPs) with ReLU activation and dropout regularization, mapping embeddings to scalar uncertainty estimates. Higher $\sigma$ values indicate greater uncertainty, which the gating mechanism uses to down-weight unreliable modalities. This uncertainty quantification is crucial for handling cases where image quality is poor (e.g., motion blur, poor lighting) or metadata is missing/ambiguous (e.g., unknown anatomic site), enabling the model to adaptively rely on the more trustworthy modality during inference.
 
 Gating network $g: \mathbb{R}^{2} \rightarrow [0,1]^{2}$ produces fusion weights:
 \begin{align}
 [g_{\text{img}}, g_{\text{text}}] &= \text{softmax}(W_g [\sigma_{\text{img}}, \sigma_{\text{text}}] + b_g),
 \end{align}
-where $W_g \in \mathbb{R}^{2 \times 2}$ and $b_g \in \mathbb{R}^{2}$ are learnable parameters that transform uncertainty scores into normalized gating coefficients. This equation implements the gating mechanism that learns to map uncertainty estimates to fusion weights during training. The weight matrix $W_g$ and bias vector $b_g$ are optimized through backpropagation to minimize classification loss while satisfying complementarity constraints. The softmax function ensures $g_{\text{img}} + g_{\text{text}} = 1$, creating a normalized weighted combination where more certain modalities receive higher weights. The fused embedding is:
+where $W_g \in \mathbb{R}^{2 \times 2}$ and $b_g \in \mathbb{R}^{2}$ are learnable parameters. The fused embedding is:
 \begin{equation}
 z = g_{\text{img}} \cdot z_{\text{img}} + g_{\text{text}} \cdot z_{\text{text}} \in \mathbb{R}^{d}.
 \end{equation}
-This adaptive fusion equation dynamically balances visual and textual information on a per-sample basis through element-wise multiplication and addition. The gating coefficients $g_{\text{img}}$ and $g_{\text{text}}$ act as scalar weights that modulate the contribution of each modality embedding, automatically down-weighting unreliable modalities (e.g., poor image quality or missing metadata) while emphasizing trustworthy signals. This per-sample adaptation is critical for robust performance across diverse input conditions encountered in clinical practice.
 
 Class prototypes $\{\mu_c\}_{c=1}^{C}$ where $\mu_c \in \mathbb{R}^{d}$ are maintained as exponential moving averages of class embeddings:
 \begin{equation}
 \mu_c^{(t+1)} = \alpha \mu_c^{(t)} + (1-\alpha) \mathbb{E}_{z \in \mathcal{C}_c}[z],
 \end{equation}
-with momentum $\alpha = 0.9$. This equation implements the prototype update mechanism that maintains stable class representations throughout training. At each training iteration $t$, the prototype for class $c$ is updated by computing a weighted average between the previous prototype $\mu_c^{(t)}$ and the mean embedding of all samples from class $c$ in the current batch (denoted $\mathbb{E}_{z \in \mathcal{C}_c}[z]$). The momentum parameter $\alpha$ controls the update rate: higher values (closer to 1) make prototypes more stable and resistant to noisy batches, while lower values allow faster adaptation to new data distributions. These prototypes serve as reference points in embedding space, enabling prototype-based explanations (by identifying nearest prototypes to a test sample) and improving classification boundaries through the prototype alignment loss that pulls embeddings toward their correct class prototype.
+with momentum $\alpha = 0.9$.
 
-The classifier $f: \mathbb{R}^{d} \rightarrow \mathbb{R}^{C}$ produces logits $\ell = W_f z + b_f$ through a linear transformation, calibrated via temperature scaling:
+The classifier $f: \mathbb{R}^{d} \rightarrow \mathbb{R}^{C}$ produces logits $\ell = W_f z + b_f$, calibrated via temperature scaling:
 \begin{equation}
 p_c = \frac{\exp(\ell_c / T)}{\sum_{j=1}^{C} \exp(\ell_j / T)},
 \end{equation}
-where temperature $T \in \mathbb{R}^+$ is learned on validation data to minimize expected calibration error. This equation implements temperature-scaled softmax for probability calibration. The classifier first computes raw logits $\ell = W_f z + b_f$ through a linear transformation with weight matrix $W_f \in \mathbb{R}^{C \times d}$ and bias vector $b_f \in \mathbb{R}^{C}$. The temperature parameter $T$ then scales these logits before applying the softmax function to obtain calibrated class probabilities $p_c$. This temperature scaling adjusts the confidence of predictions: $T > 1$ softens probabilities (reducing overconfidence by spreading probability mass more evenly across classes), while $T < 1$ sharpens them (increasing confidence in the top prediction). The denominator normalizes across all $C$ classes to ensure $\sum_{c=1}^{C} p_c = 1$, maintaining a valid probability distribution. The temperature $T$ is optimized post-training on a held-out validation set using grid search to minimize expected calibration error (ECE). Proper calibration is critical in medical applications, ensuring that a model predicting 80\% confidence is correct approximately 80\% of the time, enabling clinicians to appropriately weight algorithmic recommendations in decision-making.
+where temperature $T \in \mathbb{R}^+$ is learned on validation data.
 
 Selection head $s: \mathbb{R}^{d} \rightarrow [0,1]$ estimates prediction reliability:
 \begin{equation}
@@ -361,7 +363,7 @@ where $B_b$ are confidence bins, $N$ is batch size.
 Hyperparameters: $\lambda_1 = 0.1$, $\lambda_2 = 0.05$, $\lambda_3 = 0.2$, $\lambda_4 = 0.01$.
 
 \subsubsection{Training Algorithm}
-\begin{algorithm}[!t]
+\begin{algorithm}[H]
 \caption{UG-CMGF Training}
 \begin{algorithmic}[1]
 \State \textbf{Input:} Training set $\mathcal{D} = \{(I_i, M_i, y_i)\}_{i=1}^{N}$, epochs $E$, batch size $B$, learning rate $\eta$
@@ -397,9 +399,9 @@ See Appendix~\ref{app:ugcmgf} for additional implementation details and inferenc
 
 \subsubsection{Practical Training Protocol}
 
-Algorithm~\ref{alg:practical-training} presents the practical training loop used in this implementation, incorporating standard deep learning practices for multimodal skin lesion classification.
+Algorithm~\ref{alg:practical-training} presents the practical training loop used in our implementation, incorporating standard deep learning practices for multimodal skin lesion classification.
 
-\begin{algorithm}[!t]
+\begin{algorithm}[H]
 \caption{Practical Multimodal Training Loop}
 \label{alg:practical-training}
 \begin{algorithmic}[1]
@@ -462,7 +464,7 @@ Algorithm~\ref{alg:practical-training} presents the practical training loop used
 
 \begin{itemize}
   \item Metrics: AUROC/AUPRC/Accuracy/F1; ECE, Brier score, and reliability plots; per-class support and confusion matrices.
-  \item Generalization: train/validate on ISIC 2019/2020; evaluate on HAM10000; sensitivity analyses by site, sex, and device/source.
+  \item Generalization: train/validate on ISIC 2019/2020; evaluate on ISIC 2018; sensitivity analyses by site, sex, and device/source.
   \item Significance: bootstrap CIs for all metrics; DeLong or paired bootstrap for AUROC differences; report effect sizes.
   \item Safety/Deferral: track deferral rates and error types; require manual review for deferred/low-confidence cases.
 \end{itemize}
@@ -507,13 +509,13 @@ The system comprises two stages: a multimodal diagnostic engine that fuses image
 \end{figure*}
 
 \subsection{Components}
-\paragraph{Image encoder.} A CNN or ViT backbone extracts morphology-sensitive features. After global pooling and a projection layer, the representation $z_{\text{img}}$ with fixed dimensionality is produced for fusion.
+\paragraph{Image encoder.} A CNN or ViT backbone extracts morphology-sensitive features. After global pooling and a projection layer, we obtain $z_{\text{img}}$ with fixed dimensionality for fusion.
 
 \paragraph{Metadata encoder.} A compact BERT-class model embeds short, templated sentences (e.g., ``Male, 62 years, upper back'') to produce $z_{\text{text}}$.
 
 \paragraph{Fusion and classifier.} The reference uses concatenation with a linear softmax head. UG-CMGF augments this with uncertainty-gated fusion and class prototypes to stabilize decision boundaries.
 
-\paragraph{Calibration and selection.} Temperature scaling is applied on validation splits. A selection head supports conservative deferral when confidence is low or conflicts are detected.
+\paragraph{Calibration and selection.} We apply temperature scaling on validation splits. A selection head supports conservative deferral when confidence is low or conflicts are detected.
 
 \paragraph{Generative reporter.} A structured prompt composed from class, confidence, salient cues, and (optionally) prototype neighbors yields a focused note aligned with dermatology documentation.
 
@@ -552,30 +554,30 @@ The system comprises two stages: a multimodal diagnostic engine that fuses image
 
 % === Section 6: RESULTS AND ANALYSIS ===
 \section{RESULTS AND ANALYSIS}
-This study reports discrimination, calibration, generalization, and reporting quality under fixed seeds and matched preprocessing. Confidence intervals come from bootstrap resampling (1000 iterations); significance testing uses paired bootstraps and DeLong tests for AUROC comparisons. Error analysis examines failure modes by class, anatomic site, and patient demographics.
+This work reports discrimination, calibration, generalization, and reporting quality under fixed seeds and matched preprocessing. Confidence intervals come from bootstrap resampling (1000 iterations); significance testing uses paired bootstraps and DeLong tests for AUROC comparisons. Error analysis examines failure modes by class, anatomic site, and patient demographics.
 
 \subsection{Dataset Description}
 
-The primary training and validation data comprise ISIC 2019 and ISIC 2020 challenges, totaling 58,457 dermoscopic images across 8 diagnostic categories: melanoma (MEL), melanocytic nevus (NV), basal cell carcinoma (BCC), actinic keratosis (AK), benign keratosis (BKL), dermatofibroma (DF), vascular lesion (VASC), and squamous cell carcinoma (SCC). Patient-level stratification ensures no data leakage, with 70\% training (40,920 images), 15\% validation (8,769 images), and 15\% test (8,768 images).
+Our primary training and validation data comprise ISIC 2019 and ISIC 2020 challenges, totaling 58,457 dermoscopic images across 8 diagnostic categories: melanoma (MEL), melanocytic nevus (NV), basal cell carcinoma (BCC), actinic keratosis (AK), benign keratosis (BKL), dermatofibroma (DF), vascular lesion (VASC), and squamous cell carcinoma (SCC). Patient-level classification works to provide data privacy, with 70\% training (40,920 images), 15\% validation (8,769 images), and 15\% test (8,768 images).
 
-Class distribution exhibits significant imbalance: NV comprises 62.3\% of samples, while DF and VASC each represent less than 2\%. This study addresses this through stratified sampling and class-weighted loss ($w_c = N / (C \cdot n_c)$ where $N$ is total samples, $C$ is number of classes, $n_c$ is samples in class $c$). Metadata completeness: age available for 94.2\% of cases (mean 52.7 years, SD 18.3), sex for 96.8\% (53.1\% female), anatomic site for 89.4\% (most common: back 28.7\%, lower extremity 22.1\%, upper extremity 18.4\%).
+Class distribution show quite a bit of imbalance: NV comprises 62.3\% of samples, while DF and VASC each represent less than 2\%. The work addresses this through classified sampling and class-weighted loss ($w_c = N / (C \cdot n_c)$ where $N$ is total samples, $C$ is number of classes, $n_c$ is samples in class $c$). Metadata completeness: age available for 94.2\% of cases (mean 52.7 years, SD 18.3), sex for 96.8\% (53.1\% female), anatomic site for 89.4\% (most common: back 28.7\%, lower extremity 22.1\%, upper extremity 18.4\%).
 
-External validation is performed on HAM10000 (10,015 images across 7 categories), which exhibits different acquisition protocols, device characteristics, and demographic distributions compared to ISIC challenges, providing a rigorous generalization benchmark.
+ISIC 2018 is used as an out-of-distribution test set, having a total of 10,015 images across 7 categories (excluding SCC). This dataset exhibits a range of acquisition protocols, device characteristics, and demographic distributions, providing an effective and meticulous generalization benchmark.
 
 \subsubsection{HAM10000 Dataset for Validation}
 
-To further validate the multimodal approach and assess generalization across diverse data sources, the HAM10000 (Human Against Machine with 10,000 training images) dataset is incorporated. HAM10000 comprises 10,015 dermatoscopic images collected over 20 years from two different sites: the Department of Dermatology at the Medical University of Vienna, Austria, and the skin cancer practice of Cliff Rosendahl in Queensland, Australia. This dataset provides an independent validation benchmark with different acquisition characteristics and patient demographics compared to ISIC challenges.
+To further validate the aforementioned multimodal approach and assess generalization across diverse data sources, this work incorporates the HAM10000 (Human Against Machine with 10,000 training images) dataset. HAM10000 is made up of 10,015 dermatoscopic images collected over 20 years from two different sites, the Department of Dermatology at the Medical University of Vienna, Austria, and the skin cancer practice of Cliff Rosendahl in Queensland, Australia. In contrast to ISIC challenges, the HAM10000 dataset has an independent validation benchmark with unique acquisition characteristics and patient demographics.
 
-The HAM10000 dataset includes 7 diagnostic categories: actinic keratoses and intraepithelial carcinoma (akiec), basal cell carcinoma (bcc), benign keratosis-like lesions (bkl), dermatofibroma (df), melanoma (mel), melanocytic nevi (nv), and vascular lesions (vasc). The class distribution exhibits severe imbalance characteristic of real-world clinical settings: nv dominates with approximately 67\% of samples (6,705 images), while minority classes such as df (115 images, 1.1\%) and vasc (142 images, 1.4\%) are significantly underrepresented. This imbalance mirrors actual dermatological practice where benign nevi are far more common than malignant lesions.
+The HAM10000 dataset includes 7 diagnostic categories: actinic keratoses and intraepithelial carcinoma (akiec), basal cell carcinoma (bcc), benign keratosis-like lesions (bkl), dermatofibroma (df), melanoma (mel), melanocytic nevi (nv), and vascular lesions (vasc). The class distribution showcases a rather varied features of real-world clinical settings: nv dominates with approximately 67\% of samples (6,705 images), while minority classes such as df (115 images, 1.1\%) and vasc (142 images, 1.4\%) are significantly underrepresented. This disparity is similar to actual dermatological practice where benign nevi are far more common than malignant lesions.
 
-For the experiments on HAM10000, a balanced sampling strategy is implemented to address class imbalance, limiting each class to a maximum of 600 samples where available. This yields a working subset of 2,898 images with improved class balance while preserving the challenge of minority class recognition. An 80-20 train-validation split with stratification by diagnosis is applied, resulting in 2,318 training images and 580 validation images. Metadata preprocessing follows the same protocol as ISIC datasets: age values are imputed using median (mean age 52.3 years), sex is imputed using mode, and anatomic site information is standardized and converted to natural language templates (e.g., ``A lesion from the back of a 70 year old male'').
+For our experiments on HAM10000, we implement a balanced sampling strategy to address class imbalance, limiting each class to a maximum of 600 samples where available. This yields a working subset of 2,898 images with improved class balance while preserving the challenge of minority class recognition. We apply an 80-20 train-validation split with stratification by diagnosis, resulting in 2,318 training images and 580 validation images. Metadata preprocessing follows the same protocol as ISIC datasets: age values are imputed using median (mean age 52.3 years), sex is imputed using mode, and anatomic site information is standardized and converted to natural language templates (e.g., ``A lesion from the back of a 70 year old male'').
 
 \vspace{0.3cm}
 \noindent
 \begin{minipage}{\columnwidth}
 \centering
 \includegraphics[width=0.95\columnwidth]{LesionLocalisation.png}
-\captionof{figure}{\small Anatomic site distribution in HAM10000 dataset. The back and lower extremity are the most common lesion locations, accounting for over 40\% of cases, while less common sites include scalp, hand, ear, and genital regions. This distribution reflects typical clinical presentation patterns and informs metadata-based contextual priors in the multimodal fusion approach.}
+\captionof{figure}{\small Anatomic site distribution in HAM10000 dataset. The back and lower extremity are the most common lesion locations, accounting for over 40\% of cases, while less common sites include scalp, hand, ear, and genital regions. This distribution reflects typical clinical presentation patterns and informs metadata-based contextual priors in our multimodal fusion approach.}
 \label{fig:lesion-localisation}
 \end{minipage}
 \vspace{0.3cm}
@@ -589,7 +591,7 @@ For the experiments on HAM10000, a balanced sampling strategy is implemented to 
 \end{minipage}
 \vspace{0.3cm}
 
-To evaluate multimodal fusion on HAM10000, two model configurations are trained: (1) ResNet-18 image encoder combined with BERT-base-uncased text encoder, and (2) EfficientNet-B0 image encoder with ClinicalBERT text encoder. Both use the same fusion architecture with reduced model capacity appropriate for the smaller dataset size. The image encoders extract 512-dimensional features from $224 \times 224$ pixel dermoscopic images preprocessed with standard augmentations (horizontal flip, rotation $\pm 10°$, normalization). The text encoders process metadata sentences with maximum token length 40, producing 768-dimensional embeddings. Features are concatenated and passed through a fusion classifier with 1,280 input dimensions mapping to 7 output classes.
+To evaluate multimodal fusion on HAM10000, we train two model configurations: (1) ResNet-18 image encoder combined with BERT-base-uncased text encoder, and (2) EfficientNet-B0 image encoder with ClinicalBERT text encoder. Both use the same fusion architecture with reduced model capacity appropriate for the smaller dataset size. The image encoders extract 512-dimensional features from $224 \times 224$ pixel dermoscopic images preprocessed with standard augmentations (horizontal flip, rotation $\pm 10°$, normalization). The text encoders process metadata sentences with maximum token length 40, producing 768-dimensional embeddings. Features are concatenated and passed through a fusion classifier with 1,280 input dimensions mapping to 7 output classes.
 
 Training employs AdamW optimizer with learning rate $3 \times 10^{-4}$, batch size 16, and early stopping based on validation accuracy. The ResNet-18 + BERT configuration achieves 79.31\% validation accuracy after 21 epochs (best at epoch 18), while the EfficientNet-B0 + ClinicalBERT configuration achieves 86.12\% validation accuracy after 30 epochs, demonstrating effective transfer of the fusion approach to an independent dataset with different imaging protocols. The superior performance of EfficientNet + ClinicalBERT (6.81\% improvement) validates the benefits of domain-specific pretraining and more efficient architecture design for medical imaging tasks.
 
@@ -597,8 +599,7 @@ Training employs AdamW optimizer with learning rate $3 \times 10^{-4}$, batch si
 \begin{itemize}
   \item \textit{Hardware:} NVIDIA A100 GPU (40GB), AMD EPYC 7742 CPU (64 cores), 512GB RAM
   \item \textit{Image preprocessing:} Resize to $512 \times 512$ pixels for ISIC datasets and $224 \times 224$ pixels for HAM10000, normalize per ImageNet statistics ($\mu = [0.485, 0.456, 0.406]$, $\sigma = [0.229, 0.224, 0.225]$), augmentation (horizontal/vertical flip $p=0.5$, rotation $\pm 20°$ for ISIC and $\pm 10°$ for HAM10000, color jitter $\pm 0.1$)
-  \item \textit{Image encoders:} ResNet-50 (25.6M parameters), EfficientNet\-B4 (19.3M parameters), ViT\-B/16 (86.6M parameters) for ISIC datasets, all pretrained on ImageNet-21k;\\
-  \hspace*{1.5em}ResNet-18 (11.7M parameters) and EfficientNet\-B0 for HAM10000 validation experiments
+  \item \textit{Image encoders:} ResNet-50 (25.6M parameters), EfficientNet-B4 (19.3M parameters), ViT-B/16 (86.6M parameters) for ISIC datasets, all pretrained on ImageNet-21k; ResNet-18 (11.7M parameters) and EfficientNet-B0 for HAM10000 validation experiments
   \item \textit{Text encoders:} BERT-base (110M parameters), BioClinicalBERT (110M parameters) pretrained on 2M clinical notes
   \item \textit{Training:} AdamW optimizer ($\beta_1=0.9$, $\beta_2=0.999$, weight decay $10^{-4}$), initial learning rate $3 \times 10^{-4}$ with cosine annealing, batch size 32 for ISIC and 16 for HAM10000, maximum 50 epochs with early stopping (patience 5), random seed 42
   \item \textit{Calibration:} Temperature scaling on validation set via grid search over $T \in [0.5, 5.0]$ with step 0.1
@@ -606,7 +607,7 @@ Training employs AdamW optimizer with learning rate $3 \times 10^{-4}$, batch si
 
 \subsection{Model Performance Metrics}
 
-Table 1 presents discrimination metrics for the implemented multimodal models on ISIC 2020 binary classification (melanoma vs nevus) and HAM10000 7-class classification tasks. The ISIC implementation achieves 90\% validation accuracy with balanced performance across both classes, while HAM10000 experiments demonstrate the scalability of multimodal fusion to multi-class scenarios.
+Table 1 presents discrimination metrics for our implemented multimodal models on ISIC 2020 binary classification (melanoma vs nevus) and HAM10000 7-class classification tasks. The ISIC implementation achieves 90\% validation accuracy with balanced performance across both classes, while HAM10000 experiments demonstrate the scalability of multimodal fusion to multi-class scenarios.
 
 \begin{table*}[t]
 \centering
@@ -615,12 +616,12 @@ Table 1 presents discrimination metrics for the implemented multimodal models on
 \toprule
 \textbf{Model Configuration} & \textbf{Dataset} & \textbf{Classes} & \textbf{Val Accuracy} \\
 \midrule
-\multicolumn{4}{l}{\textit{ISIC 2019 Multimodal Classification}} \\
-ResNet-18 + Metadata Encoder & ISIC 2019 & 2 & 0.90 \\
+\multicolumn{4}{l}{\textit{ISIC 2020 Binary Classification}} \\
+ResNet-18 + Metadata Encoder & ISIC & 2 & 0.90 \\
 \midrule
 \multicolumn{4}{l}{\textit{HAM10000 Multi-Class Classification}} \\
 ResNet-18 + BERT-base & HAM10000 & 7 & 0.87 \\
-\textbf{EfficientNet-B0 + ClinicalBERT} &  & \textbf{7} & \textbf{0.8612} \\
+\textbf{EfficientNet-B0 + ClinicalBERT} & \textbf{HAM10000} & \textbf{7} & \textbf{0.8612} \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -661,29 +662,15 @@ ResNet-18 + BERT-base & 0.7931 & 21 \\
 
 Training curves for both ISIC and HAM10000 experiments demonstrate effective learning and convergence. The ISIC binary classification model (ResNet-18 + Metadata Encoder) trained for 5 epochs achieves stable 90\% validation accuracy with balanced performance across melanoma and nevus classes. For HAM10000, the ResNet-18 + BERT model converges after 21 epochs with best validation accuracy of 79.31\% at epoch 18, while the EfficientNet-B0 + ClinicalBERT configuration achieves 86.12\% after 30 epochs, demonstrating superior performance through domain-specific pretraining and efficient architecture design.
 
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.9\textwidth]{LossCurve.png}
-\caption{Training and validation loss across epochs for HAM10000 experiments. Loss decreases monotonically during training, with validation loss stabilizing after early epochs, indicating convergence without severe overfitting.}
-\label{fig:loss-curve}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.9\textwidth]{AccuraceCurve.png}
-\caption{Training and validation accuracy across epochs for HAM10000 experiments. Validation accuracy plateaus around the final reported performance, consistent with the selected checkpoints.}
-\label{fig:accuracy-curve}
-\end{figure*}
-
 Training employed AdamW optimizer with learning rate $3 \times 10^{-4}$ and batch sizes of 16 for HAM10000 and variable for ISIC experiments. The balanced sampling strategy for HAM10000 (maximum 600 samples per class) helped address class imbalance while maintaining sufficient training data. Early stopping based on validation accuracy prevented overfitting, with the best models selected based on peak validation performance.
 
 \subsection{Comparative Analysis}
 
-The implemented multimodal approach demonstrates effective fusion of image and metadata features across different classification scenarios. The ISIC binary classification achieves 90\% accuracy with balanced precision and recall for both melanoma (F1: 0.89) and nevus (F1: 0.90) classes. The HAM10000 7-class classification shows progressive improvement from ResNet-18 + BERT (79.31\%) to EfficientNet-B0 + ClinicalBERT (86.12\%), validating the benefits of domain-specific pretraining and efficient architectures for medical imaging tasks.
+Our implemented multimodal approach demonstrates effective fusion of image and metadata features across different classification scenarios. The ISIC binary classification achieves 90\% accuracy with balanced precision and recall for both melanoma (F1: 0.89) and nevus (F1: 0.90) classes. The HAM10000 7-class classification shows progressive improvement from ResNet-18 + BERT (79.31\%) to EfficientNet-B0 + ClinicalBERT (86.12\%), validating the benefits of domain-specific pretraining and efficient architectures for medical imaging tasks.
 
 \begin{table*}[!t]
 \centering
-\caption{Comparison with related work on skin lesion classification. The implementation focuses on practical multimodal fusion with actual measured results.}
+\caption{Comparison with related work on skin lesion classification. Our implementation focuses on practical multimodal fusion with actual measured results.}
 \begin{tabular}{llccc}
 \toprule
 \textbf{Study} & \textbf{Method} & \textbf{Dataset} & \textbf{Classes} & \textbf{Accuracy} \\
@@ -694,7 +681,7 @@ Haenssle et al. (2018) & CNN Ensemble & ISIC & 2 & 86.6\% \\
 Tschandl et al. (2019) & ResNet-152 & HAM10000 & 7 & 82.0\% \\
 Codella et al. (2019) & Ensemble + Metadata & ISIC 2018 & 7 & 85.1\% \\
 \midrule
-\multicolumn{5}{l}{\textit{Implementation in this work}} \\
+\multicolumn{5}{l}{\textit{Our Implementation}} \\
 \textbf{This Work} & ResNet-18 + Metadata & ISIC 2020 & 2 & \textbf{90.0\%} \\
 \textbf{This Work} & ResNet-18 + BERT & HAM10000 & 7 & 87\% \\
 \textbf{This Work} & EfficientNet-B0 + ClinicalBERT & HAM10000 & 7 & \textbf{86.12\%} \\
@@ -702,7 +689,7 @@ Codella et al. (2019) & Ensemble + Metadata & ISIC 2018 & 7 & 85.1\% \\
 \end{tabular}
 \end{table*}
 
-Table 4 compares this implementation with related work in skin lesion classification. The multimodal approach achieves competitive performance, with 90\% accuracy on ISIC binary classification exceeding several prior works. The HAM10000 results demonstrate effective multi-class classification, with the EfficientNet-B0 + ClinicalBERT configuration achieving 86.12\% accuracy, comparable to state-of-the-art ensemble methods while using a simpler architecture.
+Table 4 compares our implementation with related work in skin lesion classification. Our multimodal approach achieves competitive performance, with 90\% accuracy on ISIC binary classification exceeding several prior works. The HAM10000 results demonstrate effective multi-class classification, with the EfficientNet-B0 + ClinicalBERT configuration achieving 86.12\% accuracy, comparable to state-of-the-art ensemble methods while using a simpler architecture.
 
 \subsection{Ablation Studies and Architecture Comparisons}
 
@@ -731,7 +718,7 @@ Figure~\ref{fig:isic-visual} presents a representative example from the ISIC val
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.9\textwidth]{ConfusionMatrixHam.png}
-\caption{Confusion matrix for HAM10000 7-class classification. The matrix shows the model's performance across all seven diagnostic categories (akiec, bcc, bkl, df, mel, nv, vasc) on the validation set of 580 samples. Strong diagonal values indicate good classification accuracy, with the model achieving 86.12\% overall validation accuracy using EfficientNet-B0 + ClinicalBERT configuration.}
+\caption{Confusion matrix for HAM10000 7-class classification.}
 \label{fig:confusion-matrix-ham}
 \end{figure*}
 
@@ -747,37 +734,8 @@ Figure~\ref{fig:confusion-matrix-ham} presents the confusion matrix for HAM10000
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.9\textwidth]{Visualisation.png}
-\caption{Additional visualization examples from the validation set demonstrating the model's classification capabilities across different lesion presentations. The examples show diverse dermoscopic patterns including original images and Grad-CAM visualizations highlighting the regions of focus for the model's predictions. The visualizations demonstrate the model's ability to correctly identify both melanoma and nevus cases with varying confidence levels.}
+\caption{Visualization example from the validation set demonstrating the work's classification capabilities across different lesion presentations.}
 \label{fig:visualization}
-\end{figure*}
-
-% Streamlit dashboard screenshots (full-width figures)
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{img1.png}
-\caption{Streamlit interface: landing screen with configuration panel (API key), patient information inputs (age, sex), and the dermoscopic image upload widget for starting an analysis.}
-\label{fig:streamlit-1}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{img2.png}
-\caption{Streamlit dashboard: multilingual clinical report generation view illustrating structured sections and Spanish output.}
-\label{fig:streamlit-2}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{img3.png}
-\caption{Streamlit dashboard: AI visualization module displaying attention overlay and heatmap for interpretability.}
-\label{fig:streamlit-3}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{img4.png}
-\caption{Streamlit dashboard: simple visualization view with the analyzed image and corresponding probability chart for the current prediction.}
-\label{fig:streamlit-4}
 \end{figure*}
 
 Figure~\ref{fig:visualization} presents additional examples from the validation set, illustrating the model's performance across diverse lesion presentations. The visualizations include both original dermoscopic images and Grad-CAM heatmaps showing the model's attention patterns. The Grad-CAM visualizations reveal that the model focuses on clinically relevant features such as pigment patterns, border irregularities, and color variations, validating that the multimodal approach successfully integrates visual morphology with clinical metadata to produce accurate classifications.
@@ -786,10 +744,10 @@ Figure~\ref{fig:visualization} presents additional examples from the validation 
 
 Algorithm~\ref{alg:gradcam} describes the Gradient-weighted Class Activation Mapping (Grad-CAM) procedure used to generate visual explanations of model predictions by highlighting discriminative regions in dermoscopic images.
 
-\begin{algorithm}[!t]
+\begin{algorithm}[H]
 \caption{Grad-CAM Visualization}
 \label{alg:gradcam}
-\begin{algorithmic}[1]\small
+\begin{algorithmic}[1]
 \State \textbf{Input:} Model $\mathcal{M}$, image tensor $I$, text inputs $(ids, mask)$, target layer $L$
 \State \textbf{Output:} Heatmap $H$, predicted class $c^*$
 \vspace{3pt}
@@ -870,7 +828,7 @@ The proposed architecture generalizes to other medical imaging domains—radiolo
 % === APPENDIX SECTION ===
 \section{UG-CMGF: Method Details}\label{app:ugcmgf}
 \paragraph{Design overview.}
-This work proposes \textbf{UG-CMGF}, an uncertainty-aware fusion mechanism that learns to gate the contributions of image and metadata features on a per-sample basis, while aligning the joint embedding to class prototypes for stability and interpretability.
+We propose \textbf{UG-CMGF}, an uncertainty-aware fusion mechanism that learns to gate the contributions of image and metadata features on a per-sample basis, while aligning the joint embedding to class prototypes for stability and interpretability.
 \begin{itemize}
   \item \textit{Uncertainty heads}: attach lightweight evidential heads to both image and text encoders to estimate per-sample uncertainty from intermediate features.
   \item \textit{Gated fusion}: compute gates $g_{\text{img}}$ and $g_{\text{text}}$ from uncertainty scores using a small MLP with sigmoid outputs and a soft penalty encouraging $g_{\text{img}} + g_{\text{text}} \approx 1$. Form the fused embedding:
