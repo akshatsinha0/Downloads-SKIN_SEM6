@@ -12,6 +12,7 @@
 \usepackage{newunicodechar}
 \usepackage{array}
 \usepackage{tabularx}
+\usepackage{longtable}
 \usepackage{enumitem}
 \usepackage[font=small]{caption}
 \usepackage{hyperref}
@@ -52,7 +53,7 @@
 
 \vspace{0.6cm}
 
-{\itshape Submitted in partial fulfillment of the requirements for the degree of\par}
+{\itshape Submitted in fulfillment of the requirements for the degree of\par}
 
 \vspace{0.3cm}
 
@@ -102,7 +103,8 @@ November 2025\par
 
 % === DECLARATION PAGE ===
 \clearpage
-\thispagestyle{empty}
+\pagenumbering{roman}
+\setcounter{page}{1}
 
 \begin{center}
 {\Large\bfseries DECLARATION\par}
@@ -139,7 +141,6 @@ We further declare that the work reported in this project has not been submitted
 
 % === CERTIFICATE PAGE ===
 \clearpage
-\thispagestyle{empty}
 
 \begin{center}
 {\Large\bfseries CERTIFICATE\par}
@@ -154,15 +155,15 @@ This is to certify that the project entitled \textbf{A Multimodal Generative AI 
 
 The contents of this report have not been submitted and will not be submitted either in part or in full, for the award of any other degree or diploma in this institute or any other institute or university. The project fulfills the requirements and regulations of the University and in my opinion meets the necessary standards for submission.
 
-\vspace{2cm}
+\vspace{1.2cm}
 
 \noindent Place: Vellore \hfill Date: \underline{\hspace{3cm}}
 
-\vspace{2cm}
+\vspace{1.2cm}
 
 \noindent \textbf{Signature of the Guide}
 
-\vspace{0.5cm}
+\vspace{0.3cm}
 
 \noindent \textbf{Dr. Naga Priyadarsini R}
 
@@ -172,21 +173,30 @@ The contents of this report have not been submitted and will not be submitted ei
 
 \noindent \textit{School of Computer Science and Engineering (SCOPE)}
 
-\vspace{2cm}
+\vspace{1cm}
 
 \noindent \textbf{Examiner(s)}
 
-\vspace{1cm}
+\vspace{0.5cm}
 
 \noindent 1. \underline{\hspace{8cm}}
 
-\vspace{0.5cm}
+\vspace{0.3cm}
 
 \noindent 2. \underline{\hspace{8cm}}
 
+\vspace{1cm}
+
+\noindent \textbf{Countersigned by}
+
+\vspace{0.5cm}
+
+\noindent \textbf{Bhuminathan P}
+
+\noindent \textit{B.Tech}
+
 % === ACKNOWLEDGEMENTS PAGE ===
 \clearpage
-\thispagestyle{empty}
 
 \begin{center}
 {\Large\bfseries ACKNOWLEDGEMENTS\par}
@@ -217,11 +227,9 @@ Thank you all for your contributions and support.
 
 % === TABLE OF CONTENTS ===
 \clearpage
-\pagenumbering{roman}
-\setcounter{page}{1}
 
 \begin{center}
-{\fontsize{14pt}{21pt}\selectfont\bfseries\MakeUppercase{Table of Contents}\par}
+{\fontsize{14pt}{21pt}\selectfont\bfseries TABLE OF CONTENTS\par}
 \end{center}
 
 \vspace{0.5cm}
@@ -229,50 +237,73 @@ Thank you all for your contributions and support.
 \setstretch{1.5}
 \renewcommand{\arraystretch}{1.05}
 
-{\small
-\noindent\begin{tabularx}{\textwidth}{|>{\centering\arraybackslash}p{1.4cm}|X|>{\centering\arraybackslash}p{2.2cm}|}
+{\normalsize
+\begin{longtable}{|>{\centering\arraybackslash}p{1.4cm}|p{9.5cm}|>{\centering\arraybackslash}p{2.2cm}|}
 \hline
 \textbf{Sl.No} & \textbf{Contents} & \textbf{Page No.} \\
 \hline
- & \textbf{Abstract} & i \\
+\endfirsthead
+
 \hline
-\textbf{1.} & \textbf{INTRODUCTION} & 1 \\
- & 1.1 Background & 1 \\
- & 1.2 Motivations & 1-2 \\
- & 1.3 Scope of the Project & 2 \\
+\textbf{Sl.No} & \textbf{Contents} & \textbf{Page No.} \\
 \hline
-\textbf{2.} & \textbf{PROJECT DESCRIPTION AND GOALS} & 2 \\
- & 2.1 Literature Review & 2-3 \\
- & 2.2 Gaps Identified & 3 \\
- & 2.3 Problem Statement & 3 \\
- & 2.4 Project Plan & 3-4 \\
- & 2.5 Activity Chart and Work Breakdown Structure & 4 \\
+\endhead
+
 \hline
-\textbf{3.} & \textbf{REQUIREMENT ANALYSIS} & 4 \\
- & 3.1 Datasets and Governance & 4-5 \\
- & 3.2 Functional Requirements & 5 \\
- & 3.3 Data and Preprocessing Requirements & 5 \\
- & 3.4 Model and Baseline Requirements & 5 \\
- & 3.5 Novel Algorithmic Improvement & 5-6 \\
- & 3.6 Evaluation and Quality Requirements & 6 \\
- & 3.7 System and Deployment Requirements & 6 \\
- & 3.8 Risks, Ethics, and Mitigations & 6 \\
- & 3.9 Deliverables & 6 \\
+\endfoot
+
 \hline
-\textbf{4.} & \textbf{SYSTEM DESIGN} & 6 \\
- & 4.1 Architecture Overview & 6-7 \\
- & 4.2 Components & 7 \\
- & 4.3 Data Flow & 7 \\
- & 4.4 Prompting Template & 7-8 \\
- & 4.5 Deployment Considerations & 8 \\
- & 4.6 Assumptions and Limitations & 8 \\
+\endlastfoot
+
+ & \hyperlink{abstract}{\textbf{Abstract}} & \textbf{i} \\
 \hline
-\textbf{5.} & \textbf{REFERENCES} & 8 \\
+\textbf{1.} & \hyperlink{chapter1}{\textbf{INTRODUCTION}} & \textbf{1} \\
+ & \hyperlink{sec:1.1}{1.1 Background} & 1 \\
+ & \hyperlink{sec:1.2}{1.2 Motivations} & 1 \\
+ & \hyperlink{sec:1.3}{1.3 Scope of the Project} & 1 \\
 \hline
- & \textbf{Appendix A -- UG-CMGF Method Details} & 12 \\
- & \textbf{Appendix B -- Ablation Protocols} & 13 \\
+\textbf{2.} & \hyperlink{chapter2}{\textbf{PROJECT DESCRIPTION AND GOALS}} & \textbf{2} \\
+ & \hyperlink{sec:2.1}{2.1 Literature Review} & 2 \\
+ & 2.2 Research Gap & 3 \\
+ & 2.3 Objectives & 3 \\
+ & \hyperlink{sec:2.4}{2.4 Problem Statement} & 3 \\
+ & \hyperlink{sec:2.5}{2.5 Project Plan} & 3 \\
 \hline
-\end{tabularx}
+\textbf{3.} & \hyperlink{chapter3}{\textbf{TECHNICAL SPECIFICATION}} & \textbf{4} \\
+ & 3.1 Requirements & 4 \\
+ & \quad 3.1.1 Functional & 4 \\
+ & \quad 3.1.2 Non-Functional & 4 \\
+ & 3.2 Feasibility Study & 5 \\
+ & \quad 3.2.1 Technical Feasibility & 5 \\
+ & \quad 3.2.2 Economic Feasibility & 5 \\
+ & \quad 3.2.2 Social Feasibility & 5 \\
+ & 3.3 System Specification & 5 \\
+ & \quad 3.3.1 Hardware Specification & 5 \\
+ & \quad 3.3.2 Software Specification & 5 \\
+\hline
+\textbf{4.} & \hyperlink{chapter4}{\textbf{DESIGN APPROACH AND DETAILS}} & \textbf{6} \\
+ & 4.1 System Architecture & 6 \\
+ & 4.2 Design & 7 \\
+ & \quad 4.2.1 Data Flow Diagram & 7 \\
+ & \quad 4.2.2 Use Case Diagram & 7 \\
+ & \quad 4.2.3 Class Diagram & 7 \\
+ & \quad 4.2.4 Sequence Diagram & 7 \\
+\hline
+\textbf{5.} & \hyperlink{chapter5}{\textbf{METHODOLOGY AND TESTING}} & \textbf{8} \\
+ & \textit{<< Module Description >>} & \\
+ & \textit{<< Testing >>} & \\
+\hline
+\textbf{6.} & \hyperlink{chapter6}{\textbf{PROJECT DEMONSTRATION}} & \textbf{9} \\
+\hline
+\textbf{7.} & \hyperlink{chapter7}{\textbf{RESULT AND DISCUSSION (COST ANALYSIS as applicable)}} & \textbf{10} \\
+\hline
+\textbf{8.} & \hyperlink{chapter8}{\textbf{CONCLUSION}} & \textbf{11} \\
+\hline
+\textbf{9.} & \hyperlink{chapter9}{\textbf{REFERENCES}} & \textbf{12} \\
+\hline
+ & \hyperlink{appendixa}{\textbf{APPENDIX A -- SAMPLE CODE}} & \textbf{13} \\
+\hline
+\end{longtable}
 }
 
 \setstretch{1.5}
@@ -295,6 +326,23 @@ Thank you all for your contributions and support.
 2.2 & Activity chart (Gantt) aligned to Phases 1--5 & 4 \\
 \hline
 4.1 & Two-stage system: image/text encoders, gated fusion with prototypes, calibrated softmax, selection head, and controlled prompting & 7 \\
+\hline
+\end{tabularx}
+
+% === LIST OF TABLES ===
+\clearpage
+
+\begin{center}
+{\fontsize{14pt}{21pt}\selectfont\bfseries\MakeUppercase{List of Tables}\par}
+\end{center}
+
+\vspace{0.5cm}
+
+\noindent\begin{tabularx}{\textwidth}{|>{\centering\arraybackslash}p{2.5cm}|X|>{\centering\arraybackslash}p{2.2cm}|}
+\hline
+\textbf{Table No.} & \textbf{Title} & \textbf{Page No.} \\
+\hline
+\multicolumn{3}{|c|}{\textit{(Tables will be added as they appear in the document)}} \\
 \hline
 \end{tabularx}
 
@@ -361,7 +409,7 @@ WBS & Work Breakdown Structure \\
 
 % === ABSTRACT ===
 \clearpage
-\setcounter{page}{1}
+\hypertarget{abstract}{}
 
 \begin{center}
 {\fontsize{16pt}{24pt}\selectfont\bfseries\MakeUppercase{Abstract}\par}
@@ -389,19 +437,23 @@ Planned evaluations compare CNN and Vision Transformer encoders for images, and 
 
 \section*{CHAPTER 1}
 \addcontentsline{toc}{section}{CHAPTER 1}
+\hypertarget{chapter1}{}
 
 \section{INTRODUCTION}
 
 Dermatology decisions depend on dermoscopic images and simple patient context, yet image-only or text-only approaches miss complementary signals and black-box outputs hinder trust. We build a two-stage assistant tailored to dermoscopy: (i) a diagnostic engine that fuses embeddings from an image encoder and a metadata text encoder to produce calibrated class probabilities, and (ii) a generative reporter that turns the prediction, confidence, and context into a short clinician-style note with justification, differentials, and next steps. The design aims for accuracy, clarity, and auditability so the tool acts as a reliable second opinion without replacing clinical judgment.
 
+\hypertarget{sec:1.1}{}
 \subsection{Background}
 
 Dermoscopy exposes morphology (networks, streaks, vessels) that benefits from learned features, while age, sex, and lesion site shift priors and disambiguate similar visuals. Multimodal learning combines these: an image encoder for morphology, a text encoder for context, and a simple fusion for classification. Large public cohorts support robust training and cross-dataset checks. Generative models, when grounded on structured outputs and constrained prompts, can produce concise, reviewable notes that make reasoning explicit.
 
+\hypertarget{sec:1.2}{}
 \subsection{Motivations}
 
 We target earlier, more consistent triage by pairing calibrated probabilities with clear, reusable wording. A modular two-stage design lets encoders improve independently of reporting, simplifies audits and deployments, and leverages open datasets for validation without changing clinical workflows.
 
+\hypertarget{sec:1.3}{}
 \subsection{Scope of the Project}
 
 In scope: dermoscopic images plus metadata (age, sex, site); comparison of CNN vs ViT image encoders and general vs clinical text encoders; simple fusion with softmax; discrimination and calibration on internal splits and cross-dataset checks; generation of short, clinician-style reports grounded in structured outputs.
@@ -413,15 +465,18 @@ Out of scope: histopathology, non-dermoscopic photos, longitudinal follow-up, or
 
 \section*{CHAPTER 2}
 \addcontentsline{toc}{section}{CHAPTER 2}
+\hypertarget{chapter2}{}
 
 \section{PROJECT DESCRIPTION AND GOALS}
 
 We combine a multimodal diagnostic engine with a grounded generative reporter to deliver calibrated probabilities and concise explanations for common lesion categories, acting as a second opinion that improves transparency and reduces note burden.
 
+\hypertarget{sec:2.1}{}
 \subsection{Literature Review}
 
 Dermoscopic analysis evolved from hand-crafted features to CNNs and ViTs that capture long-range patterns. Lightweight metadata (age, sex, site) meaningfully shifts priors when fused with image features. Simple concatenation remains a strong, auditable fusion baseline; attention-based methods can help but add complexity. Interpretability and documentation are key for adoption; templated, constrained LLM prompting can turn structured outputs into faithful prose. Open cohorts enable rigorous benchmarking, ablations, and generalization checks.
 
+\hypertarget{sec:2.2}{}
 \subsection{Gaps Identified}
 
 \begin{itemize}
@@ -434,10 +489,12 @@ Dermoscopic analysis evolved from hand-crafted features to CNNs and ViTs that ca
   \item Image-only systems underuse easily available context near decision boundaries, limiting diagnostic robustness.
 \end{itemize}
 
+\hypertarget{sec:2.4}{}
 \subsection{Problem Statement}
 
 Given a dermoscopic image and metadata (age, sex, site), map to a calibrated distribution over lesion classes and a faithful, human-readable summary of the decision. The system must stay modular so backbones, fusion, and prompting improve independently under clear, reproducible constraints.
 
+\hypertarget{sec:2.5}{}
 \subsection{Project Plan}
 
 The work plan is organized into five phases:
@@ -475,6 +532,7 @@ This activity view follows the five phases already defined in the plan and maps 
 
 \section*{CHAPTER 3}
 \addcontentsline{toc}{section}{CHAPTER 3}
+\hypertarget{chapter3}{}
 
 \section{REQUIREMENT ANALYSIS}
 
@@ -555,6 +613,7 @@ We introduce UG-CMGF, an uncertainty-aware gate that balances image and metadata
 
 \section*{CHAPTER 4}
 \addcontentsline{toc}{section}{CHAPTER 4}
+\hypertarget{chapter4}{}
 
 \section{SYSTEM DESIGN}
 
@@ -620,6 +679,7 @@ The system has two stages: a multimodal diagnostic engine that fuses image and m
 
 \section*{CHAPTER 5}
 \addcontentsline{toc}{section}{CHAPTER 5}
+\hypertarget{chapter9}{}
 
 \section{REFERENCES}
 
@@ -744,6 +804,7 @@ Burlina, P. M., Paul, W., Mathew, P. A., Joshi, N. J., Rebman, A. W., \& Aucott,
 
 \section*{APPENDIX A}
 \addcontentsline{toc}{section}{APPENDIX A}
+\hypertarget{appendixa}{}
 
 \section*{UG-CMGF: Method Details}
 
