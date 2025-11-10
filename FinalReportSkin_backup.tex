@@ -321,17 +321,11 @@ Thank you all for your contributions and support.
 \hline
 \textbf{Figure No.} & \textbf{Title} & \textbf{Page No.} \\
 \hline
-2.1 & Work Breakdown Structure (WBS) & \\
+2.1 & Work Breakdown Structure (WBS) & 4 \\
 \hline
-2.2 & Activity chart (Gantt) aligned to Phases 1--5 & \\
+2.2 & Activity chart (Gantt) aligned to Phases 1--5 & 4 \\
 \hline
-4.1 & Two-stage system: image/text encoders, gated fusion with prototypes, calibrated softmax, selection head, and controlled prompting & \\
-\hline
-4.2 & Level 0 Data Flow Diagram showing the high-level context of the multimodal skin lesion diagnosis system & \\
-\hline
-4.3 & Level 2 Data Flow Diagram providing detailed view of internal processes & \\
-\hline
-4.4 & Use Case Diagram showing the primary actors and their interactions with the system & \\
+4.1 & Two-stage system: image/text encoders, gated fusion with prototypes, calibrated softmax, selection head, and controlled prompting & 7 \\
 \hline
 \end{tabularx}
 
@@ -348,9 +342,13 @@ Thank you all for your contributions and support.
 \hline
 \textbf{Table No.} & \textbf{Title} & \textbf{Page No.} \\
 \hline
-7.1 & Performance comparison on implemented datasets & \\
+\multicolumn{3}{|c|}{\textit{(Tables will be added as they appear in the document)}} \\
 \hline
 \end{tabularx}
+
+\vspace{0.5cm}
+
+\noindent \textit{Note: In the chapters, figure caption should come below the figure and table caption should come above the table. Figure and table captions should be of font size 10.}
 
 % === LIST OF ABBREVIATIONS ===
 \clearpage
@@ -505,7 +503,7 @@ The work plan is organized into five phases:
 
 \paragraph{Phase 2: Baselines/Model.} Train image-only (CNN, ViT), text-only (BERT), and multimodal concatenation; track discrimination and calibration with fixed seeds.
 
-\paragraph{Phase 3: Ablations/Generalization.} Compare encoders, modalities, and calibration; test on HAM10000 for cross-dataset validation; produce reliability plots and confusion matrices.
+\paragraph{Phase 3: Ablations/Generalization.} Compare encoders, modalities, and calibration; test on ISIC 2018; produce reliability plots and confusion matrices.
 
 \paragraph{Phase 4: Reporting.} Design a compact, deterministic prompt with guardrails; validate clarity, faithfulness, and completeness via a small rubric.
 
@@ -543,7 +541,7 @@ This section specifies the functional and non-functional requirements for the mu
 \subsection{Datasets and Governance}
 
 \begin{itemize}
-  \item Train/Val/Test on ISIC 2019/2020 with patient-level stratification; use HAM10000 for external validation and out-of-distribution tests.
+  \item Train/Val/Test on ISIC 2019/2020 with patient-level stratification; reserve ISIC 2018 for out-of-distribution tests.
   \item Metadata in scope: age, sex, lesion site; de-identified; missing fields flagged explicitly.
   \item Document licenses, splits, transforms, and class definitions; version datasets and configs.
 \end{itemize}
@@ -582,7 +580,7 @@ We introduce UG-CMGF, an uncertainty-aware gate that balances image and metadata
 
 \begin{itemize}
   \item Metrics: AUROC/AUPRC/Accuracy/F1; ECE and reliability plots; per-class support and confusion matrices.
-  \item Generalization: train/validate on ISIC 2019/2020; evaluate on HAM10000 for cross-dataset validation; sensitivity analyses by site and sex.
+  \item Generalization: train/validate on ISIC 2019/2020; evaluate on ISIC 2018; sensitivity analyses by site and sex.
   \item Safety/Deferral: track deferral rates and error types; require manual review for deferred/low-confidence cases.
 \end{itemize}
 
@@ -630,47 +628,6 @@ The system has two stages: a multimodal diagnostic engine that fuses image and m
   \label{fig:system-design}
 \end{figure}
 
-\subsection{Design}
-
-This subsection presents the key design diagrams that illustrate the system architecture, data flow, and use cases.
-
-\subsubsection{Data Flow Diagram}
-
-The data flow diagrams illustrate how information moves through the multimodal skin lesion diagnosis system at different levels of abstraction.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.95\textwidth]{level0dfd.png}
-  \caption{Level 0 Data Flow Diagram showing the high-level context of the multimodal skin lesion diagnosis system. The diagram shows external entities (Clinician and EHR/Clinical System) interacting with the central system, which processes dermoscopic images and patient metadata to produce diagnostic reports and calibrated probabilities.}
-  \label{fig:level0-dfd}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{level2dfd.png}
-  \caption{Level 2 Data Flow Diagram providing detailed view of internal processes. The diagram shows the complete workflow from data ingestion through preprocessing, feature extraction, multimodal fusion, classification, calibration, report generation, and result storage. Each process is connected by data flows showing the transformation of inputs into diagnostic outputs.}
-  \label{fig:level2-dfd}
-\end{figure}
-
-\subsubsection{Use Case Diagram}
-
-The use case diagram identifies the key actors and their interactions with the system.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.85\textwidth]{usecase.png}
-  \caption{Use Case Diagram showing the primary actors (Clinician/User, Patient, Image Source/Dermatoscope, Admin) and their interactions with the multimodal skin lesion diagnosis system. Key use cases include uploading images and metadata, validating and preprocessing data, extracting features, generating clinical reports, storing results, and monitoring system performance.}
-  \label{fig:usecase}
-\end{figure}
-
-\subsubsection{Class Diagram}
-
-The class diagram will illustrate the object-oriented structure of the system components, showing the relationships between image encoders, text encoders, fusion modules, classifiers, and reporting components. \textit{[Placeholder for class diagram]}
-
-\subsubsection{Sequence Diagram}
-
-The sequence diagram will show the temporal flow of interactions between system components during a typical diagnostic workflow, from image upload through report generation. \textit{[Placeholder for sequence diagram]}
-
 \subsection{Components}
 
 \paragraph{Image encoder.} CNN or ViT backbone yields \(z_{\text{img}}\) after pooling+projection.
@@ -717,272 +674,11 @@ The sequence diagram will show the temporal flow of interactions between system 
   \item Reports remain decision support and require clinician review, especially on deferred or low-confidence cases.
 \end{itemize}
 
-% === CHAPTER 5: METHODOLOGY AND TESTING ===
+% === CHAPTER 5: REFERENCES ===
 \clearpage
 
 \section*{CHAPTER 5}
 \addcontentsline{toc}{section}{CHAPTER 5}
-\hypertarget{chapter5}{}
-
-\section{METHODOLOGY AND TESTING}
-
-This section details datasets and governance, preprocessing, model components, training and evaluation protocol, and a proposed algorithmic improvement that augments fusion, calibration, and explanation quality.
-
-\subsection{Datasets and Governance}
-
-\begin{itemize}
-  \item Create patient-level stratified Train/Val/Test splits on ISIC 2019/2020; use HAM10000 as an external validation set.
-  \item Use de-identified metadata (age, sex, anatomic site); represent missing fields explicitly.
-  \item Document licenses, inclusion/exclusion criteria, transforms, and class definitions.
-\end{itemize}
-
-\subsection{Task and Outputs}
-
-\begin{itemize}
-  \item Input: one dermoscopic image + \{age, sex, anatomic site\}.
-  \item Diagnostic output: class probabilities with per-class confidence and calibrated overall score.
-  \item Reporter output: short note with diagnosis, justification, differentials, and next steps.
-  \item Uncertainty/Audit: below-threshold confidence triggers deferral; log model/version/seed.
-\end{itemize}
-
-\subsection{Data and Preprocessing}
-
-\begin{itemize}
-  \item Imaging: square crop/pad; resize (448--512); normalize; light augments.
-  \item Metadata: standardize categories; encode as short sentences.
-  \item Imbalance/Quality: stratified sampling and/or class weights; exclude corrupted images.
-\end{itemize}
-
-\subsection{Models and Baselines}
-
-\begin{itemize}
-  \item Image encoders: CNN and ViT-family models, fine-tuned from public weights.
-  \item Text encoders: compact BERT and clinically pretrained variant.
-  \item Fusion/Calibration: concatenation+linear softmax; temperature scaling.
-  \item Optimization: AdamW, cosine decay, early stopping on validation AUROC.
-\end{itemize}
-
-\subsection{Novel Algorithmic Improvement}
-
-UG-CMGF introduces uncertainty-aware gating to balance image and metadata features per case and align embeddings to class prototypes. A selection head defers low-confidence cases.
-
-\subsection{Evaluation Protocol}
-
-\begin{itemize}
-  \item Metrics: AUROC/AUPRC/Accuracy/F1; ECE, Brier score, reliability plots.
-  \item Generalization: train/validate on ISIC 2019/2020; evaluate on HAM10000.
-  \item Significance: bootstrap CIs; DeLong tests for AUROC comparisons.
-  \item Safety/Deferral: track deferral rates and error types.
-\end{itemize}
-
-\subsection{Testing Strategy}
-
-\begin{itemize}
-  \item \textbf{Unit Testing:} Individual components tested with synthetic data.
-  \item \textbf{Integration Testing:} Complete pipeline tested with sample batches.
-  \item \textbf{Validation Testing:} Performance evaluated on held-out validation sets.
-  \item \textbf{Cross-Dataset Testing:} Generalization assessed on HAM10000.
-  \item \textbf{Ablation Testing:} Systematic removal of components quantifies contributions.
-\end{itemize}
-
-% === CHAPTER 6: PROJECT DEMONSTRATION ===
-\clearpage
-
-\section*{CHAPTER 6}
-\addcontentsline{toc}{section}{CHAPTER 6}
-\hypertarget{chapter6}{}
-
-\section{PROJECT DEMONSTRATION}
-
-The multimodal skin lesion diagnosis system has been implemented as an interactive web application using Streamlit, providing an accessible interface for clinicians and researchers.
-
-\subsection{System Interface}
-
-The Streamlit dashboard provides:
-
-\begin{itemize}
-  \item \textbf{Image Upload:} Upload dermoscopic images in standard formats.
-  \item \textbf{Metadata Input:} Forms for patient age, sex, and anatomic site.
-  \item \textbf{Model Selection:} Choose between encoder configurations.
-  \item \textbf{Prediction Display:} Visual presentation of class probabilities with confidence scores.
-  \item \textbf{Explanation Generation:} Automated clinician-style reports.
-  \item \textbf{Visualization Tools:} Grad-CAM heatmaps showing model attention patterns.
-  \item \textbf{Multilingual Support:} Report generation in multiple languages.
-\end{itemize}
-
-\subsection{Demonstration Workflow}
-
-\begin{enumerate}
-  \item User uploads dermoscopic image through web interface.
-  \item User enters patient metadata in provided form fields.
-  \item User selects model configuration and clicks ``Analyze''.
-  \item System preprocesses image and metadata, extracts embeddings, performs fusion.
-  \item System displays calibrated class probabilities with confidence scores.
-  \item System generates structured clinical report.
-  \item System provides Grad-CAM visualizations.
-  \item User can download report as PDF.
-\end{enumerate}
-
-\subsection{Example Outputs}
-
-\begin{itemize}
-  \item \textbf{Diagnostic Prediction:} Primary diagnosis with calibrated confidence.
-  \item \textbf{Class Probabilities:} Distribution across diagnostic categories.
-  \item \textbf{Clinical Report:} Concise summary with diagnosis, justification, differentials, next steps.
-  \item \textbf{Attention Maps:} Grad-CAM heatmaps overlaid on original image.
-  \item \textbf{Metadata Summary:} Display of input patient information.
-\end{itemize}
-
-\subsection{Performance Characteristics}
-
-\begin{itemize}
-  \item \textbf{Latency:} Under 500ms on CPU, approximately 100ms on GPU.
-  \item \textbf{Throughput:} Batch processing support for multiple images.
-  \item \textbf{Reliability:} Calibrated predictions with ECE below 0.05.
-  \item \textbf{Accessibility:} Web-based interface accessible from any device.
-\end{itemize}
-
-% === CHAPTER 7: RESULTS AND DISCUSSION ===
-\clearpage
-
-\section*{CHAPTER 7}
-\addcontentsline{toc}{section}{CHAPTER 7}
-\hypertarget{chapter7}{}
-
-\section{RESULTS AND DISCUSSION}
-
-This study reports discrimination, calibration, generalization, and reporting quality under fixed seeds and matched preprocessing.
-
-\subsection{Dataset Description}
-
-The primary data comprise ISIC 2019 and ISIC 2020 challenges, totaling 58,457 dermoscopic images across 8 diagnostic categories. Patient-level stratification ensures no data leakage, with 70\% training, 15\% validation, and 15\% test.
-
-Class distribution exhibits significant imbalance: NV comprises 62.3\% of samples. This study addresses this through stratified sampling and class-weighted loss. Metadata completeness: age available for 94.2\% of cases, sex for 96.8\%, anatomic site for 89.4\%.
-
-External validation is performed on HAM10000 (10,015 images across 7 categories).
-
-\subsection{HAM10000 Dataset for Validation}
-
-HAM10000 comprises 10,015 dermatoscopic images collected over 20 years from two different sites. The dataset includes 7 diagnostic categories with severe class imbalance: nv dominates with approximately 67\% of samples.
-
-For experiments, a balanced sampling strategy is implemented, limiting each class to a maximum of 600 samples. This yields a working subset of 2,898 images. An 80-20 train-validation split results in 2,318 training images and 580 validation images.
-
-\subsection{Experimental Setup}
-
-\begin{itemize}
-  \item \textit{Hardware:} NVIDIA A100 GPU (40GB), AMD EPYC 7742 CPU (64 cores), 512GB RAM
-  \item \textit{Image preprocessing:} Resize to 512\(\times\)512 for ISIC and 224\(\times\)224 for HAM10000
-  \item \textit{Image encoders:} ResNet-50, EfficientNet-B4, ViT-B/16 for ISIC; ResNet-18, EfficientNet-B0 for HAM10000
-  \item \textit{Text encoders:} BERT-base, BioClinicalBERT
-  \item \textit{Training:} AdamW optimizer, learning rate \(3 \times 10^{-4}\), batch size 32 for ISIC and 16 for HAM10000
-  \item \textit{Calibration:} Temperature scaling on validation set
-\end{itemize}
-
-\subsection{Model Performance Metrics}
-
-Table~\ref{tab:performance} presents discrimination metrics. The ISIC implementation achieves 90\% validation accuracy, while HAM10000 experiments demonstrate scalability to multi-class scenarios.
-
-\begin{table}[h]
-\centering
-\caption{Performance comparison on implemented datasets.}
-\label{tab:performance}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Model Configuration} & \textbf{Dataset} & \textbf{Classes} & \textbf{Val Accuracy} \\
-\midrule
-ResNet-18 + Metadata & ISIC 2020 & 2 & 0.90 \\
-ResNet-18 + BERT & HAM10000 & 7 & 0.87 \\
-\textbf{EfficientNet-B0 + ClinicalBERT} & HAM10000 & \textbf{7} & \textbf{0.8612} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Per-class performance reveals balanced classification on the ISIC binary task with F1-scores of 0.89 and 0.90 for melanoma and nevus respectively.
-
-\subsection{Training and Validation Results}
-
-Training curves demonstrate effective learning and convergence. The ISIC binary classification model achieves stable 90\% validation accuracy. For HAM10000, ResNet-18 + BERT converges after 21 epochs with 79.31\% accuracy, while EfficientNet-B0 + ClinicalBERT achieves 86.12\% after 30 epochs.
-
-\subsection{Comparative Analysis}
-
-The multimodal approach demonstrates effective fusion. The ISIC binary classification achieves 90\% accuracy with balanced precision and recall. The HAM10000 7-class classification shows progressive improvement, validating benefits of domain-specific pretraining.
-
-\subsection{Ablation Studies}
-
-EfficientNet-B0 outperforms ResNet-18 by 6.81\% validation accuracy, attributed to compound scaling strategy. ClinicalBERT improves over general BERT through domain-specific pretraining on 2M clinical notes.
-
-\subsection{Model Reliability and Generalization}
-
-The implemented models demonstrate reliable performance across different dataset characteristics. Cross-dataset validation demonstrates generalizability of the multimodal fusion approach.
-
-\subsection{Cost Analysis}
-
-The entire project was implemented using free-tier resources and open-source tools, resulting in zero direct costs:
-
-\begin{itemize}
-  \item \textbf{Computational Resources:} All training and experimentation conducted using Google Colab free tier with GPU access. No cloud computing costs incurred.
-  \item \textbf{Data Storage:} ISIC 2019/2020 and HAM10000 datasets accessed through publicly available repositories. Local storage and Google Drive free tier used for data management.
-  \item \textbf{Development Tools:} Exclusively open-source frameworks (PyTorch, Transformers, Streamlit, scikit-learn) with no licensing costs.
-  \item \textbf{Deployment:} Streamlit Community Cloud free tier used for web application hosting.
-  \item \textbf{Development Environment:} Google Colab, Jupyter Notebook, and VS Code (all free).
-  \item \textbf{Total Project Cost:} \$0 - All development, training, and deployment completed using free-tier services and open-source tools.
-\end{itemize}
-
-The cost-effectiveness of this approach demonstrates the accessibility of modern AI research and development, enabling high-quality medical AI systems without significant financial barriers.
-
-% === CHAPTER 8: CONCLUSION ===
-\clearpage
-
-\section*{CHAPTER 8}
-\addcontentsline{toc}{section}{CHAPTER 8}
-\hypertarget{chapter8}{}
-
-\section{CONCLUSION}
-
-\subsection{Summary of Work}
-
-This work presents a two-stage multimodal assistant for dermoscopic skin lesion diagnosis that combines image and metadata features to produce calibrated class probabilities and clinician-style explanations. The system achieves 90\% validation accuracy on ISIC 2020 binary classification and 86.12\% accuracy on HAM10000 7-class classification.
-
-Key accomplishments include:
-
-\begin{itemize}
-  \item Development of modular multimodal architecture combining CNN/ViT image encoders with BERT-based text encoders.
-  \item Implementation of uncertainty-guided cross-modal gated fusion (UG-CMGF).
-  \item Integration of temperature scaling for probability calibration, achieving ECE below 0.05.
-  \item Creation of generative reporting module producing concise clinician-style summaries.
-  \item Deployment of interactive Streamlit web application.
-  \item Comprehensive evaluation across multiple datasets demonstrating generalization.
-\end{itemize}
-
-\subsection{Limitations}
-
-\begin{itemize}
-  \item Scope limited to dermoscopic images and specified metadata fields.
-  \item Class imbalance in training data may affect performance on rare lesion types.
-  \item Generalization to different imaging devices requires further validation.
-  \item Explanation generation relies on structured prompting.
-  \item System requires clinician review and should not be used as standalone diagnostic tool.
-\end{itemize}
-
-\subsection{Future Scope}
-
-\begin{itemize}
-  \item \textbf{Extended Modalities:} Incorporation of patient history and sequential imaging.
-  \item \textbf{Improved Calibration:} Investigation of Bayesian neural networks and evidential deep learning.
-  \item \textbf{Federated Learning:} Privacy-preserving multi-institutional collaboration.
-  \item \textbf{Clinical Validation:} Prospective clinical trials in real-world settings.
-  \item \textbf{Regulatory Approval:} Pursuit of FDA and CE marking for clinical deployment.
-  \item \textbf{Expanded Lesion Types:} Extension to additional skin conditions.
-  \item \textbf{Mobile Deployment:} Development of mobile applications for point-of-care use.
-\end{itemize}
-
-The multimodal approach demonstrates that combining visual and contextual information improves diagnostic accuracy and provides transparent, auditable predictions suitable for clinical decision support.
-
-% === CHAPTER 9: REFERENCES ===
-\clearpage
-
-\section*{CHAPTER 9}
-\addcontentsline{toc}{section}{CHAPTER 9}
 \hypertarget{chapter9}{}
 
 \section{REFERENCES}
@@ -994,7 +690,7 @@ The multimodal approach demonstrates that combining visual and contextual inform
 
   \item \textbf{ISIC 2019:} Contains over 25,000 images with 8 diagnostic categories. \url{https://challenge2019.isic-archive.com/}
 
-  \item \textbf{HAM10000:} Human Against Machine with 10,000 training images dataset comprising 10,015 dermatoscopic images across 7 diagnostic categories. \url{https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T}
+  \item \textbf{ISIC 2018:} Contains 10,000 images for lesion classification into 7 categories. \url{https://challenge2018.isic-archive.com/}
 
   \item \textbf{Kaggle Resources:}\\ 
   \url{https://www.kaggle.com/datasets/kmader/skin-cancer-mnist-ham10000/code}\\
