@@ -395,6 +395,69 @@ Hyperparameters: $\lambda_1 = 0.1$, $\lambda_2 = 0.05$, $\lambda_3 = 0.2$, $\lam
 
 See Appendix~\ref{app:ugcmgf} for additional implementation details and inference pseudocode.
 
+\subsubsection{Practical Training Protocol}
+
+Algorithm~\ref{alg:practical-training} presents the practical training loop used in our implementation, incorporating standard deep learning practices for multimodal skin lesion classification.
+
+\begin{algorithm}[H]
+\caption{Practical Multimodal Training Loop}
+\label{alg:practical-training}
+\begin{algorithmic}[1]
+\State \textbf{Configuration:}
+\State \quad Set device $\leftarrow$ CUDA if available, else CPU
+\State \quad Load MultimodalNet($\text{num\_classes}$)
+\State \quad Define $\mathcal{L}_{\text{CE}} \leftarrow$ CrossEntropyLoss()
+\State \quad Define optimizer $\leftarrow$ Adam($\theta$, $\eta$)
+\State \quad Define scheduler $\leftarrow$ ReduceLROnPlateau(mode='max', factor=0.1, patience=2)
+\State \quad Initialize $\text{best\_val\_acc} \leftarrow 0$
+\vspace{3pt}
+\For{epoch $e = 1$ to $E$}
+    \Statex \textit{// Training phase}
+    \State Set model to training mode
+    \State Initialize $\mathcal{L}_{\text{train}} \leftarrow 0$, $\text{correct}_{\text{train}} \leftarrow 0$
+    \For{each batch $(I, \text{ids}, \text{mask}, y)$ in train\_loader}
+        \State Move $(I, \text{ids}, \text{mask}, y)$ to device
+        \State Reset optimizer gradients
+        \State $\hat{y} \leftarrow \text{model}(I, \text{ids}, \text{mask})$ \Comment{Forward pass}
+        \State $\mathcal{L} \leftarrow \mathcal{L}_{\text{CE}}(\hat{y}, y)$
+        \State $\mathcal{L}$.backward() \Comment{Backward pass}
+        \State optimizer.step()
+        \State Accumulate $\mathcal{L}_{\text{train}}$, $\text{correct}_{\text{train}}$
+    \EndFor
+    \State Compute $\text{train\_loss}$, $\text{train\_acc}$
+    \vspace{2pt}
+    \Statex \textit{// Validation phase}
+    \State Set model to evaluation mode
+    \State Disable gradient computation
+    \State Initialize $\mathcal{L}_{\text{val}} \leftarrow 0$, $\text{correct}_{\text{val}} \leftarrow 0$
+    \State Initialize $\text{all\_preds} \leftarrow []$, $\text{all\_labels} \leftarrow []$
+    \For{each batch $(I, \text{ids}, \text{mask}, y)$ in val\_loader}
+        \State Move $(I, \text{ids}, \text{mask}, y)$ to device
+        \State $\hat{y} \leftarrow \text{model}(I, \text{ids}, \text{mask})$
+        \State $\mathcal{L} \leftarrow \mathcal{L}_{\text{CE}}(\hat{y}, y)$
+        \State Accumulate $\mathcal{L}_{\text{val}}$, $\text{correct}_{\text{val}}$
+        \State Append predictions to $\text{all\_preds}$
+        \State Append labels to $\text{all\_labels}$
+    \EndFor
+    \State Compute $\text{val\_loss}$, $\text{val\_acc}$
+    \vspace{2pt}
+    \State scheduler.step($\text{val\_acc}$)
+    \vspace{2pt}
+    \If{$\text{val\_acc} > \text{best\_val\_acc}$}
+        \State $\text{best\_val\_acc} \leftarrow \text{val\_acc}$
+        \State Save model.state\_dict() to disk
+        \State Generate classification\_report($\text{all\_labels}$, $\text{all\_preds}$)
+        \State Save label\_encoder and results\_dict
+    \EndIf
+    \vspace{2pt}
+    \If{$\text{val\_acc} \geq \text{target\_accuracy}$}
+        \State \textbf{break} \Comment{Early stopping}
+    \EndIf
+\EndFor
+\State \textbf{Return:} Trained model with best validation accuracy
+\end{algorithmic}
+\end{algorithm}
+
 \subsection{Evaluation Protocol}
 
 \begin{itemize}
@@ -618,7 +681,7 @@ Codella et al. (2019) & Ensemble + Metadata & ISIC 2018 & 7 & 85.1\% \\
 \midrule
 \multicolumn{5}{l}{\textit{Our Implementation}} \\
 \textbf{This Work} & ResNet-18 + Metadata & ISIC 2020 & 2 & \textbf{90.0\%} \\
-\textbf{This Work} & ResNet-18 + BERT & HAM10000 & 7 & 79.31\% \\
+\textbf{This Work} & ResNet-18 + BERT & HAM10000 & 7 & 87\% \\
 \textbf{This Work} & EfficientNet-B0 + ClinicalBERT & HAM10000 & 7 & \textbf{86.12\%} \\
 \bottomrule
 \end{tabular}
@@ -667,6 +730,51 @@ Figure~\ref{fig:confusion-matrix-ham} presents the confusion matrix for HAM10000
 \end{figure*}
 
 Figure~\ref{fig:visualization} presents additional examples from the validation set, illustrating the model's performance across diverse lesion presentations. The visualizations include both original dermoscopic images and Grad-CAM heatmaps showing the model's attention patterns. The Grad-CAM visualizations reveal that the model focuses on clinically relevant features such as pigment patterns, border irregularities, and color variations, validating that the multimodal approach successfully integrates visual morphology with clinical metadata to produce accurate classifications.
+
+\subsubsection{Grad-CAM Visualization Algorithm}
+
+Algorithm~\ref{alg:gradcam} describes the Gradient-weighted Class Activation Mapping (Grad-CAM) procedure used to generate visual explanations of model predictions by highlighting discriminative regions in dermoscopic images.
+
+\begin{algorithm}[H]
+\caption{Grad-CAM Visualization}
+\label{alg:gradcam}
+\begin{algorithmic}[1]
+\State \textbf{Input:} Model $\mathcal{M}$, image tensor $I$, text inputs $(ids, mask)$, target layer $L$
+\State \textbf{Output:} Heatmap $H$, predicted class $c^*$
+\vspace{3pt}
+\Statex \textit{// Setup hooks}
+\State Initialize $\nabla_L \leftarrow \text{None}$, $A_L \leftarrow \text{None}$
+\State Register forward hook: $A_L \leftarrow$ activations from layer $L$
+\State Register backward hook: $\nabla_L \leftarrow$ gradients w.r.t. layer $L$
+\vspace{3pt}
+\Statex \textit{// Forward pass}
+\State Set model to evaluation mode
+\State $\hat{y} \leftarrow \mathcal{M}(I, ids, mask)$ \Comment{Get predictions}
+\State $c^* \leftarrow \arg\max_c \hat{y}_c$ \Comment{Predicted class}
+\vspace{3pt}
+\Statex \textit{// Backward pass}
+\State Zero model gradients
+\State $\mathcal{L} \leftarrow \hat{y}_{c^*}$ \Comment{Target class score}
+\State $\mathcal{L}$.backward() \Comment{Compute gradients}
+\vspace{3pt}
+\Statex \textit{// Compute heatmap}
+\State $\nabla \leftarrow \nabla_L[0]$ \Comment{Extract gradients}
+\State $A \leftarrow A_L[0]$ \Comment{Extract activations}
+\State $w_k \leftarrow \frac{1}{HW} \sum_{i,j} \nabla_{k,i,j}$ for each channel $k$ \Comment{Global average pooling}
+\State $H_{\text{raw}} \leftarrow \sum_k w_k \cdot A_k$ \Comment{Weighted combination}
+\State $H_{\text{raw}} \leftarrow \max(H_{\text{raw}}, 0)$ \Comment{ReLU activation}
+\State $H \leftarrow \text{resize}(H_{\text{raw}}, (W_{\text{img}}, H_{\text{img}}))$ \Comment{Upsample to image size}
+\State $H \leftarrow \frac{H - \min(H)}{\max(H) - \min(H)}$ \Comment{Normalize to [0,1]}
+\vspace{3pt}
+\Statex \textit{// Generate overlay}
+\State $H_{\text{color}} \leftarrow \text{applyColorMap}(H, \text{JET})$ \Comment{Apply color map}
+\State $I_{\text{overlay}} \leftarrow 0.5 \cdot H_{\text{color}} + 0.5 \cdot I$ \Comment{Blend with original}
+\vspace{3pt}
+\State \textbf{Return:} $H$, $c^*$, $I_{\text{overlay}}$
+\end{algorithmic}
+\end{algorithm}
+
+The Grad-CAM algorithm computes class-discriminative localization maps by leveraging gradient information flowing into the final convolutional layer. The weighted combination of activation maps produces a coarse heatmap highlighting regions that positively influence the predicted class. This visualization technique provides interpretable explanations of model decisions, enabling clinicians to verify that the model focuses on clinically relevant morphological features rather than spurious correlations.
 
 \subsection{Discussion and Insights}
 
