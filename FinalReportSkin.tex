@@ -294,6 +294,11 @@ Thank you all for your contributions and support.
  & 5.2 Testing & 8 \\
 \hline
 \textbf{6.} & \hyperlink{chapter6}{\textbf{PROJECT DEMONSTRATION}} & \textbf{9} \\
+ & 6.1 Project Links & 9 \\
+ & 6.2 System Interface & 9 \\
+ & 6.3 Demonstration Workflow & 9 \\
+ & 6.4 Example Outputs & 9 \\
+ & 6.5 Performance Characteristics & 9 \\
 \hline
 \textbf{7.} & \hyperlink{chapter7}{\textbf{RESULT AND DISCUSSION (COST ANALYSIS as applicable)}} & \textbf{10} \\
 \hline
@@ -338,6 +343,10 @@ Thank you all for your contributions and support.
 4.5 & Class Diagram showing the object-oriented structure of the system components & \pageref{fig:class-diagram} \\
 \hline
 4.6 & Sequence Diagram showing the temporal flow of interactions between system components during a typical diagnostic workflow & \pageref{fig:sequence-diagram} \\
+\hline
+6.1 & Streamlit dashboard showing diagnostic report generation interface with multilingual support & \pageref{fig:stream1} \\
+\hline
+6.2 & Streamlit interface displaying image upload, patient metadata input, and real-time diagnosis & \pageref{fig:stream2} \\
 \hline
 \end{tabularx}
 
@@ -761,6 +770,15 @@ Overall: Modular, transparent, and scalable architecture enabling accurate, expl
 
 The multimodal skin lesion diagnosis system has been implemented as an interactive web application using Streamlit, providing an accessible interface for clinicians and researchers.
 
+\subsection{Project Links}
+
+The complete source code and live demonstration of the system are available at:
+
+\begin{itemize}
+  \item \textbf{GitHub Repository:} \url{https://github.com/amanchauhan786/Multimodal_Lesion_Based.git}
+  \item \textbf{Streamlit Dashboard:} \url{https://multimodalskin.streamlit.app/}
+\end{itemize}
+
 \subsection{System Interface}
 
 The Streamlit dashboard provides:
@@ -774,6 +792,21 @@ The Streamlit dashboard provides:
   \item \textbf{Visualization Tools:} Grad-CAM heatmaps showing model attention patterns.
   \item \textbf{Multilingual Support:} Report generation in multiple languages.
 \end{itemize}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{stream1.png}
+  \caption{Streamlit interface displaying image upload, patient metadata input, and real-time diagnosis with
+confidence scores.}
+  \label{fig:stream1}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{stream2.png}
+  \caption{Streamlit dashboard showing diagnostic report generation interface with multilingual support and patient information display.}
+  \label{fig:stream2}
+\end{figure}
 
 \subsection{Demonstration Workflow}
 
