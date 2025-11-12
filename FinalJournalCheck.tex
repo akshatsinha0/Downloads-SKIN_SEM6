@@ -878,9 +878,21 @@ Figure~\ref{fig:isic-visual} shows a representative example from the ISIC valida
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.7\textwidth]{ConfusionMatrixHam.png}
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{ConfusionMatrixHam.png}
 \caption{Confusion matrix for HAM10000 7-class classification showing model performance across all diagnostic categories.}
 \label{fig:confusion-matrix-ham}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{conf2.png}
+\caption{Confusion matrix for ISIC multimodal classification showing model performance for melanoma vs nevus classification.}
+\label{fig:confusion-matrix-isic-below-9}
+\end{subfigure}
+\caption{Confusion matrices for (a) HAM10000 7-class classification and (b) ISIC multimodal classification (melanoma vs nevus).}
+\label{fig:confusion-matrices}
 \end{figure*}
 
 \begin{figure*}[!t]
@@ -897,7 +909,7 @@ Figure~\ref{fig:isic-visual} shows a representative example from the ISIC valida
 \label{fig:roc-isic}
 \end{figure*}
 
-Figure~\ref{fig:confusion-matrix-ham} shows the confusion matrix for HAM10000 7-class classification, revealing the model's performance across all diagnostic categories. The matrix shows the challenges of multi-class skin lesion classification, particularly for minority classes with limited training samples. The EfficientNet-B3 + ClinicalBERT configuration achieves 86.12\% validation accuracy, showing strong performance on majority classes while maintaining reasonable accuracy on rare lesion types.
+Figure~\ref{fig:confusion-matrices} shows the confusion matrices for both datasets. Figure~\ref{fig:confusion-matrix-ham} (left) shows the confusion matrix for HAM10000 7-class classification, revealing the model's performance across all diagnostic categories. The matrix shows the challenges of multi-class skin lesion classification, particularly for minority classes with limited training samples. The EfficientNet-B3 + ClinicalBERT configuration achieves 86.12\% validation accuracy, showing strong performance on majority classes while maintaining reasonable accuracy on rare lesion types. Figure~\ref{fig:confusion-matrix-isic-below-9} (right) shows the confusion matrix for ISIC multimodal classification, demonstrating balanced performance for melanoma vs nevus classification with 90\% overall accuracy.
 
 \begin{figure*}[!t]
 \centering
@@ -1096,7 +1108,17 @@ For future implementation, proposed ablation studies would compare: (i) concaten
 
 \endgroup
 
+% Adjust bibliography spacing to prevent orphaned last line
+\makeatletter
+\setlength{\bibsep}{0.4ex plus 0.1ex minus 0.05ex}
+\setlength{\itemsep}{0pt}
+\makeatother
+
 {\small
+\setlength{\baselineskip}{0.92\baselineskip}
+\setlength{\itemindent}{-1.5em}
+\setlength{\leftmargin}{1.5em}
+\setlength{\itemsep}{0.2ex}
 \begin{thebibliography}{99}
 
 \bibitem{chatterjee2024}
@@ -1215,12 +1237,7 @@ P. Tschandl, C. Rosendahl, and H. Kittler,
 doi:10.1038/sdata.2018.161
 
 \bibitem{codella2019skin}
-N. Codella, V. Rotemberg, P. Tschandl, M. E. Celebi, S. Dusza, D. Gutman, B. Helba, A. Kalloo, K. Liopyris, M. Marchetti, H. Kittler, and A. Halpern,
-``Skin lesion analysis toward melanoma detection 2018: A challenge hosted by the International Skin Imaging Collaboration (ISIC),''
-\textit{arXiv preprint arXiv:1902.03368}, 2019.
-
-
-
+N. Codella, V. Rotemberg, P. Tschandl, M. E. Celebi, S. Dusza, D. Gutman, B. Helba, A. Kalloo, K. Liopyris, M. Marchetti, H. Kittler, and A. Halpern, ``Skin lesion analysis toward melanoma detection 2018: A challenge hosted by the International Skin Imaging Collaboration (ISIC),'' \textit{arXiv preprint arXiv:1902.03368}, 2019.
 
 \end{thebibliography}
 }
